@@ -95,8 +95,42 @@ siu_base_expansion('V', kg * (m ** 2) * (s  ** -3) * ('A'  ** -1)).
 siu_base_expansion('W', kg * (m ** 2) * (s  ** -3)).
 siu_base_expansion('Wb', kg * (m ** 2) * s  ** -2 * ('A'  ** -1)).
 
-is_dimension(D).
+is_dimension([*, A, B]) :-
+    is_dimension(A),
+    is_dimension(B).
+
+is_dimension([**, A, B]) :-
+    is_dimension(A),
+    number(B).
+
+is_dimension(D) :-
+    atom(D),
+    !,
+    is_siu(D).
+
+is_dimension(D) :-
+    compound(D),
+    D =.. List,
+    is_dimension(List).
 
 is_quantity(q(N, D)) :- 
     number(N), 
     is_dimension(D).
+
+compare_units(=, U1, U2) :-
+    is_base_siu(U1),
+    is_base_siu(U2).
+
+compare_units(>, U1, U2) :-
+    is_base_siu(U1),
+    !,
+    \+is_base_siu(U2).
+
+compare_units(=, U1, U2) :-
+    \+is_base_siu(U1),
+    \+is_base_siu(U2).
+
+compare_units(<, U1, U2) :-
+    \+is_base_siu(U1),
+    is_base_siu(U2).
+
