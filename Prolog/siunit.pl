@@ -1,3 +1,52 @@
+trim(L, N, S) :-    
+    length(P, N),   
+    append(P, S, L).
+
+convert_to_sortable([], []).
+unifyp([], []).
+unifyns([], []).
+
+convert_to_sortable(['(' | As], List) :-
+    unifyp(As, Ns),
+    length(Ns, Int),
+    Int1 is Int + 2,
+    trim(['(' | As], Int1, NewAs),
+    string_chars(String, Ns),
+    append([String], NewAs, L),
+    convert_to_sortable(L, List).
+
+convert_to_sortable([A | As], List) :-
+    \+(number(A)),
+    atom_number(A,_),
+    !,
+    unifyns([A | As], Ns),
+    length(Ns, Int),
+    trim([A | As], Int, NewAs),
+    number_chars(Number, Ns),
+    append([Number], NewAs, L),
+    convert_to_sortable(L, List).
+
+convert_to_sortable([A | As], [A | List]) :-
+    convert_to_sortable(As, List).
+
+unifyp([')' | _],[]) :-
+    !.
+
+unifyp([A | As], [A | Ns]) :-
+    unifyp(As,  Ns).    
+
+unifyns([A | As], [A | Ns]) :-
+    atom_number(A, _),
+    !,
+    unifyns(As,  Ns).
+
+unifyns(['.' | As], ['.' | Ns]) :-
+    unifyns(As,  Ns).
+
+unifyns(_, []) :-
+    !.
+
+
 is_base_siu(kg).
 is_base_siu(m).
 is_base_siu(s).
@@ -117,20 +166,92 @@ is_quantity(q(N, D)) :-
     number(N), 
     is_dimension(D).
 
-compare_units(=, U1, U2) :-
-    is_base_siu(U1),
-    is_base_siu(U2).
+compare_units(=, U, U) :-
+    is_siu(U).
 
 compare_units(>, U1, U2) :-
     is_base_siu(U1),
-    !,
     \+is_base_siu(U2).
 
-compare_units(=, U1, U2) :-
-    \+is_base_siu(U1),
-    \+is_base_siu(U2).
+compare_units(>, U1, U2) :-
+    is_base_siu(U1),
+    is_base_siu(U2),
+    siu_name(U1, N1),
+    siu_name(U2, N2),
+    N1 @< N2,
+    !. 
+
+compare_units(<, U1, U2) :-
+    is_base_siu(U1),
+    is_base_siu(U2),
+    !.
 
 compare_units(<, U1, U2) :-
     \+is_base_siu(U1),
     is_base_siu(U2).
 
+compare_units(<, U1, U2) :-
+    \+is_base_siu(U1),
+    \+is_base_siu(U2),
+    siu_name(U1, N1),
+    siu_name(U2, N2),
+    N1 @> N2,
+    !. 
+
+compare_units(>, U1, U2) :-
+    \+is_base_siu(U1),
+    \+is_base_siu(U2).
+
+norm(Dim, Dim):-
+    atom(Dim),
+    is_siu(Dim).
+
+norm([A, '*', B | Rest], [A, '*', B | Rest]) :-
+    compound(A)
+
+norm(Dim, NewDim) :-
+    is_dimension(Dim),
+    with_output_to(chars(C), write(Dim)),
+    convert_to_sortable(C, SemiDim),
+    norm(SemiDim, NewDim).
+
+qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
+    is_quantity(q(N1, D1)),
+    number(N2),
+    norm(D1, DR),
+    NR is N1 + N2.
+
+qsum(q(N1, D1), q(N2, D2), q(NR, D1)) :-
+    is_quantity(q(N1, D1)),
+    norm(D2, DC),
+    siu_base_expansion(D1, DC),
+    number(N2),
+    NR is N1 + N2.
+
+qsum(q(N1, D2), q(N2, D1), q(NR, D1)) :-
+    is_quantity(q(N1, D1)),
+    norm(D2, DC),
+    siu_base_expansion(D1, DC),
+    number(N2),
+    NR is N1 + N2.
+
+qsub(q(N1, D1), q(N2, D1), q(NR, DR)) :-
+    is_quantity(q(N1, D1)),
+    number(N2),
+    norm(D1, DR),
+    NR is N1 - N2.
+
+qsub(q(N1, D1), q(N2, D2), q(NR, D1)) :-
+    is_quantity(q(N1, D1)),
+    norm(D2, DC),
+    siu_base_expansion(D1, DC),
+    number(N2),
+    NR is N1 - N2.
+
+qsub(q(N1, D2), q(N2, D1), q(NR, D1)) :-
+    is_quantity(q(N1, D1)),
+    norm(D2, DC),
+    siu_base_expansion(D1, DC),
+    number(N2),
+    NR is N1 - N2.
+    
