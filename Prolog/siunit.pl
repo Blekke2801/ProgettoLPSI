@@ -45,6 +45,41 @@ unifyns(['.' | As], ['.' | Ns]) :-
 unifyns(_, []) :-
     !.
 
+expand_all(D, DR) :-
+    is_dimension(D),
+    D =.. [*, A, B],
+    atom(A),
+    siu_base_expansion(A, DA),
+    compound(B),
+    expand_all(B, DB),
+    DR =.. [*, DA, DB].
+
+expand_all(D, DR) :-
+    is_dimension(D),
+    D =.. [*, A, B],
+    compound(A),
+    expand_all(A, DA),
+    atom(B),
+    siu_base_expansion(B, DB),
+    DR =.. [*, DA, DB].
+
+expand_all(D, DR) :-
+    is_dimension(D),
+    D =.. [*, A, B],
+    atom(A),
+    siu_base_expansion(A, DA),
+    atom(B),
+    siu_base_expansion(B, DB),
+    DR =.. [*, DA, DB].
+
+expand_all(D, DR) :-
+    is_dimension(D),
+    D =.. [*, A, B],
+    compound(A),
+    expand_all(A, DA),
+    compound(B),
+    expand_all(B, DB),
+    DR =.. [*, DA, DB].
 
 is_base_siu(kg).
 is_base_siu(m).
@@ -234,17 +269,12 @@ qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
     norm(D1, DR),
     NR is N1 + N2.
 
-qsum(q(N1, D1), q(N2, D2), q(NR, D1)) :-
+qsum(q(N1, D1), q(N2, D2), q(NR, DC)) :-
     is_quantity(q(N1, D1)),
-    norm(D2, DC),
-    siu_base_expansion(D1, DC),
-    number(N2),
-    NR is N1 + N2.
-
-qsum(q(N1, D2), q(N2, D1), q(NR, D1)) :-
-    is_quantity(q(N1, D1)),
-    norm(D2, DC),
-    siu_base_expansion(D1, DC),
+    norm(D2, D2C),
+    norm(D1, D1C),
+    expand_all(D2C, DC),
+    expand_all(D1C, DC),
     number(N2),
     NR is N1 + N2.
 
@@ -256,15 +286,29 @@ qsub(q(N1, D1), q(N2, D1), q(NR, DR)) :-
 
 qsub(q(N1, D1), q(N2, D2), q(NR, D1)) :-
     is_quantity(q(N1, D1)),
+    is_quantity(q(N2, D2)),
     norm(D2, DC),
     siu_base_expansion(D1, DC),
-    number(N2),
     NR is N1 - N2.
 
 qsub(q(N1, D2), q(N2, D1), q(NR, D1)) :-
-    is_quantity(q(N1, D1)),
+    is_quantity(q(N1, D2)),
+    is_quantity(q(N2, D1)),
     norm(D2, DC),
     siu_base_expansion(D1, DC),
-    number(N2),
     NR is N1 - N2.
-    
+
+/*qtimes(q(N1, D1), q(N2, D1), q(NR, DR)) :-
+    is_quantity(q(N1, D1)),
+    number(N2),
+    qexpt(q(N1, D1), 2, DR),
+    NR is N1 * N2.
+
+qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
+    is_quantity(q(N1, D1)),
+    is_quantity(q(N1, D1)),
+    siu_base_expansion(D1, DC1),
+    siu_base_expansion(D2, DC2),
+
+
+qexpt(Q, N, QR).*/
