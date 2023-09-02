@@ -11,8 +11,7 @@ convert_to_sortable(['(' | As], List) :-
     length(Ns, Int),
     Int1 is Int + 2,
     trim(['(' | As], Int1, NewAs),
-    string_chars(String, Ns),
-    append([String], NewAs, L),
+    append([['(' | As]], NewAs, L),
     convert_to_sortable(L, List).
 
 convert_to_sortable([A | As], List) :-
@@ -202,12 +201,26 @@ compare_units(>, U1, U2) :-
     \+is_base_siu(U1),
     \+is_base_siu(U2).
 
+norm([], []).
+
 norm(Dim, Dim):-
     atom(Dim),
     is_siu(Dim).
 
-norm([A, '*', B | Rest], [A, '*', B | Rest]) :-
-    compound(A)
+norm(['(', A, '*', B | Rest], ['(', A, '*', B | RestOut]);
+norm([A, '*', B | Rest], [A, '*', B | RestOut]) :-
+    compare_units(>, A, B),
+    norm(Rest, RestOut).
+
+norm(['(', A, '*', B | Rest], ['(', (A ** 2) | RestOut]);
+norm([A, '*', B | Rest], [(A ** 2) | RestOut]) :-
+    compare_units(=, A, B),
+    norm(Rest, RestOut).
+
+norm(['(', A, '*', B | Rest], ['(', B, '*', A | RestOut]);
+norm([A, '*', B | Rest], [B, '*', A | RestOut]) :-
+    compare_units(<, A, B),
+    norm(Rest, RestOut).
 
 norm(Dim, NewDim) :-
     is_dimension(Dim),
