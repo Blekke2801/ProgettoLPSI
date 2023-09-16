@@ -117,6 +117,7 @@ is_siu('T').
 is_siu('V').
 is_siu('W').
 is_siu('Wb').
+is_siu(g).
 
 siu_name(kg, kilogram).
 siu_name(m, metre).
@@ -178,12 +179,57 @@ siu_base_expansion('V', kg * (m ** 2) * (s  ** -3) * ('A'  ** -1)).
 siu_base_expansion('W', kg * (m ** 2) * (s  ** -3)).
 siu_base_expansion('Wb', kg * (m ** 2) * s  ** -2 * ('A'  ** -1)).
 
+prefix_expansion(kg,g*10**3):-!.
+
+prefix_expansion(Final, Exp) :-
+    atom_length(Final,L),
+    L>1,
+    atom_concat(k,Unit,Final),
+    is_siu(Unit),
+    Exp =.. [*,Unit,10**3],!.
+
+prefix_expansion(Final, Exp) :-
+    atom_length(Final,L),
+    L>1,
+    atom_concat(h,Unit,Final),
+    is_siu(Unit),
+    Exp =.. [*,Unit,10**2],!.
+
+prefix_expansion(Final, Exp) :-
+    atom_length(Final,L),
+    L>2,
+    atom_concat(da,Unit,Final),
+    is_siu(Unit),
+    Exp =.. [*,Unit,10**1],!.
+
+prefix_expansion(Final, Exp) :-
+    atom_length(Final,L),
+    L>1,
+    atom_concat(d,Unit,Final),
+    is_siu(Unit),
+    Exp =.. [*,Unit,10**(-1)],!.
+
+prefix_expansion(Final, Exp) :-
+    atom_length(Final,L),
+    L>1,
+    atom_concat(c,Unit,Final),
+    is_siu(Unit),
+    Exp =.. [*,Unit,10**(-2)],!.
+
+prefix_expansion(Final, Exp) :-
+    atom_length(Final,L),
+    L>1,
+    atom_concat(m,Unit,Final),
+    is_siu(Unit),
+    Exp =.. [*,Unit,10**(-3)],!.
+
+
 is_dimension([*, A, B]) :-
     is_dimension(A),
     is_dimension(B).
 
 is_dimension([**, A, B]) :-
-    is_dimension(A),
+    is_siu(A),
     number(B).
 
 is_dimension(D) :-
@@ -201,7 +247,8 @@ is_quantity(q(N, D)) :-
     is_dimension(D).
 
 compare_units(=, U, U) :-
-    is_siu(U).
+    is_dimension(U).
+
 
 compare_units(>, U1, U2) :-
     is_base_siu(U1),
@@ -214,6 +261,33 @@ compare_units(>, U1, U2) :-
     siu_name(U2, N2),
     N1 @< N2,
     !. 
+    
+compare_units(>, U1, U2):-
+    is_siu(U1),
+    is_dimension(U2),
+    U2 =.. [**, U1, B],
+    number(B),
+    B > 1.
+
+
+compare_units(<, U1, U2):-
+    is_siu(U1),
+    is_dimension(U2),
+    U2 =.. [**, U1, B],
+    number(B),
+    B < 1.
+
+compare_units(>, U1, U2):-
+    is_base_siu(U1),
+    is_dimension(U2),
+    U2 =.. [**, A, B],
+    \+is_base_siu(A).
+
+compare_units(<, U1, U2):-
+    \+is_base_siu(U1),
+    is_dimension(U2),
+    U2 =.. [**, A, B],
+    is_base_siu(A).
 
 compare_units(<, U1, U2) :-
     is_base_siu(U1),
@@ -225,12 +299,24 @@ compare_units(<, U1, U2) :-
     is_base_siu(U2).
 
 compare_units(<, U1, U2) :-
-    \+is_base_siu(U1),
-    \+is_base_siu(U2),
-    siu_name(U1, N1),
-    siu_name(U2, N2),
-    N1 @> N2,
-    !. 
+\+is_base_siu(U1),
+\+is_base_siu(U2),
+siu_name(U1, N1),
+siu_name(U2, N2),
+N1 @> N2,
+!. 
+
+compare_units(<, U1, U2) :-
+    is_dimension(U1),
+    is_dimension(U2),
+    U1 =.. [*, L1A, L1B],
+    U2 =.. [*, L2A, L2B],
+    compare_units(<, L1A, L2A),
+    compare_units(<, L1B, L2B).
+
+compare_units(>, U1, U2) :-
+    is_dimension(U1),
+    is_dimension(U2).
 
 compare_units(>, U1, U2) :-
     \+is_base_siu(U1),
@@ -238,7 +324,7 @@ compare_units(>, U1, U2) :-
 
 norm([], []).
 
-norm(Dim, Dim):-
+/*norm(Dim, Dim):-
     atom(Dim),
     is_siu(Dim).
 
@@ -261,7 +347,7 @@ norm(Dim, NewDim) :-
     is_dimension(Dim),
     with_output_to(chars(C), write(Dim)),
     convert_to_sortable(C, SemiDim),
-    norm(SemiDim, NewDim).
+    norm(SemiDim, NewDim).*/
 
 qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
     is_quantity(q(N1, D1)),
