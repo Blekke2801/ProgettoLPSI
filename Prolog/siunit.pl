@@ -1,3 +1,4 @@
+%banana
 trim(L, N, S) :-
     length(P, N),
     append(P, S, L).
