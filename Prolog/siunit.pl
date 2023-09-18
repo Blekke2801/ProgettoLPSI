@@ -1,10 +1,8 @@
-trim(L, N, S) :-    
-    length(P, N),   
+trim(L, N, S) :-
+    length(P, N),
     append(P, S, L).
 
 convert_to_sortable([], []).
-unifyp([], []).
-unifyns([], []).
 
 convert_to_sortable(['(' | As], List) :-
     unifyp(As, Ns),
@@ -28,11 +26,15 @@ convert_to_sortable([A | As], List) :-
 convert_to_sortable([A | As], [A | List]) :-
     convert_to_sortable(As, List).
 
+unifyp([], []).
+
 unifyp([')' | _],[]) :-
     !.
 
 unifyp([A | As], [A | Ns]) :-
-    unifyp(As,  Ns).    
+    unifyp(As,  Ns).
+
+unifyns([], []).
 
 unifyns([A | As], [A | Ns]) :-
     atom_number(A, _),
@@ -89,20 +91,16 @@ is_base_siu('K').
 is_base_siu(cd).
 is_base_siu(mol).
 
-is_siu(X) :-
-    atom(X),
-    !,
-    is_base_siu(X),
-    !.
 
 is_siu('Bq').
 is_siu(dc).
 is_siu('C').
 is_siu('F').
+is_siu(g).
 is_siu('Gy').
 is_siu('Hz').
 is_siu('H').
-is_siu('J').
+is_siu('J').    
 is_siu(kat).
 is_siu(lm).
 is_siu(lx).
@@ -117,7 +115,12 @@ is_siu('T').
 is_siu('V').
 is_siu('W').
 is_siu('Wb').
-is_siu(g).
+is_siu(X) :-
+    atom(X),
+    !,
+    is_base_siu(X),
+    !.
+
 
 siu_name(kg, kilogram).
 siu_name(m, metre).
@@ -148,6 +151,7 @@ siu_name('T', 'Tesla').
 siu_name('V', 'Volt').
 siu_name('W', 'Watt').
 siu_name('Wb', 'Weber').
+
 
 siu_symbol(N, S) :-
     siu_name(S, N).
@@ -223,6 +227,13 @@ prefix_expansion(Final, Exp) :-
     is_siu(Unit),
     Exp =.. [*,Unit,10**(-3)],!.
 
+expansion(k,10**3).
+expansion(h,10**2).
+expansion(da,10).
+expansion(d,10**(-1)).
+expansion(c,10**(-2)).
+expansion(m,10**(-3)).
+
 
 is_dimension([*, A, B]) :-
     is_dimension(A),
@@ -242,13 +253,14 @@ is_dimension(D) :-
     D =.. List,
     is_dimension(List).
 
-is_quantity(q(N, D)) :- 
-    number(N), 
+is_quantity(q(N, D)) :-
+    number(N),
     is_dimension(D).
 
-compare_units(=, U, U) :-
-    is_dimension(U).
+compare_units(=, U, U):-!.
 
+compare_units(<,'C',dc).
+compare_units(>,dc,'C').
 
 compare_units(>, U1, U2) :-
     is_base_siu(U1),
@@ -260,34 +272,7 @@ compare_units(>, U1, U2) :-
     siu_name(U1, N1),
     siu_name(U2, N2),
     N1 @< N2,
-    !. 
-    
-compare_units(>, U1, U2):-
-    is_siu(U1),
-    is_dimension(U2),
-    U2 =.. [**, U1, B],
-    number(B),
-    B > 1.
-
-
-compare_units(<, U1, U2):-
-    is_siu(U1),
-    is_dimension(U2),
-    U2 =.. [**, U1, B],
-    number(B),
-    B < 1.
-
-compare_units(>, U1, U2):-
-    is_base_siu(U1),
-    is_dimension(U2),
-    U2 =.. [**, A, B],
-    \+is_base_siu(A).
-
-compare_units(<, U1, U2):-
-    \+is_base_siu(U1),
-    is_dimension(U2),
-    U2 =.. [**, A, B],
-    is_base_siu(A).
+    !.
 
 compare_units(<, U1, U2) :-
     is_base_siu(U1),
@@ -304,19 +289,7 @@ compare_units(<, U1, U2) :-
 siu_name(U1, N1),
 siu_name(U2, N2),
 N1 @> N2,
-!. 
-
-compare_units(<, U1, U2) :-
-    is_dimension(U1),
-    is_dimension(U2),
-    U1 =.. [*, L1A, L1B],
-    U2 =.. [*, L2A, L2B],
-    compare_units(<, L1A, L2A),
-    compare_units(<, L1B, L2B).
-
-compare_units(>, U1, U2) :-
-    is_dimension(U1),
-    is_dimension(U2).
+!.
 
 compare_units(>, U1, U2) :-
     \+is_base_siu(U1),
@@ -394,7 +367,123 @@ qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
     is_quantity(q(N1, D1)),
     is_quantity(q(N1, D1)),
     siu_base_expansion(D1, DC1),
-    siu_base_expansion(D2, DC2),
+    siu_base_expansion(D2, DC2),*/
 
 
-qexpt(Q, N, QR).*/
+
+qexpt(q(Number,U), N, q(NR, UR)):-
+    is_quantity(q(Number,U)),
+    integer(N),
+    NR is Number ** N,
+    uexpt(U, N, URN),
+    norm(URN, UR).
+
+uexpt(SI ** E, N, SI ** N1):-
+    is_siu(SI),
+    number(N),
+    number(E),
+    N1 is N*E.
+
+uexpt(SI, N, SI ** N):-
+    is_siu(SI),
+    number(N).
+
+uexpt(U, N, UR):-
+    is_dimension(U),
+    integer(N),
+    U =.. [*, X, Y],
+    uexpt(X, N, UR1),
+    uexpt(Y, N, UR2),
+    UR = [*, UR1, UR2].
+
+
+
+unify_units([], []).
+unify_units([X],[X]).
+unify_units([X, X | Rest],[(X ** 2) | NRest]):-
+    !,
+    is_siu(X),
+    unify_units(Rest, NRest).
+
+unify_units([X ** N, X | Rest],[(X ** N1) | NRest]):-
+    !,
+    is_siu(X),
+    N1 is N + 1,
+    unify_units(Rest, NRest).
+
+unify_units([X, X ** N | Rest],[(X ** N1) | NRest]):-
+    !,
+    is_siu(X),
+    N1 is N + 1,
+    unify_units(Rest, NRest).
+
+unify_units([X ** N1, X ** N2 | Rest],NRest):-
+    is_siu(X),
+    0 is N1 + N2,
+    !,
+    unify_units(Rest, NRest).
+
+unify_units([X ** N1, X ** N2 | Rest],[(X ** NR) | NRest]):-
+    !,
+    is_siu(X),
+    NR is N1 + N2,
+    unify_units(Rest, NRest).
+
+unify_units([X, Y | Rest], [X, Y | NRest]) :-
+    unify_units(Rest, NRest).
+
+
+
+% Merge Sort Base
+merge_sort([], []). 
+merge_sort([A], [A]).
+
+merge_sort([A, B | Rest], S) :-
+  divide([A, B | Rest], L1, L2),
+  merge_sort(L1, S1),
+  merge_sort(L2, S2),
+  my_merge(S1, S2, S).
+
+divide([], [], []).
+divide([A], [A], []).
+
+divide([A, B | R], [A | Ra], [B | Rb]) :-  
+  divide(R, Ra, Rb).
+
+my_merge(A, [], A).
+my_merge([], B, B).
+
+my_merge([A | Ra], [B | Rb], [A | M]) :-
+  compare_units(>, A, B),
+  my_merge(Ra, [B | Rb], M).
+
+my_merge([A | Ra], [B | Rb], [B | M]) :-
+  compare_units(<, A, B),
+  my_merge([A | Ra], Rb, M).
+
+my_merge([A | Ra], [A | Rb], [A | M]) :-
+  my_merge(Ra, [A | Rb], M).
+
+
+% Predicato per ordinare una moltiplicazione mantenendo le parentesi
+sort_multiplication(Expr, SortedExpr) :-
+    expression_to_list(Expr, FactorList),
+    merge_sort(FactorList, SortedFactorList),
+    unify_units(SortedFactorList, UnifiedList),
+    list_to_expression(UnifiedList, SortedExpr).
+
+% Predicato per convertire un'espressione in una lista di fattori
+expression_to_list(Expr, [Expr]) :-
+    atomic(Expr),!.
+expression_to_list(Expr, FactorList) :-
+    compound(Expr),
+    Expr =.. [*, X, Y],
+    expression_to_list(X, XList),
+    expression_to_list(Y, YList),
+    append(XList, YList, FactorList).
+
+% Predicato per convertire una lista di fattori in un'espressione
+list_to_expression([Factor], Factor):-!.
+list_to_expression([Factor1, Factor2 | Rest], (Expr)) :-
+    list_to_expression([Factor1 * Factor2 | Rest], SubExpr),
+    Expr = SubExpr.
