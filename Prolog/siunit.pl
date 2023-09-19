@@ -200,12 +200,18 @@ is_dimension([*, A, B]) :-
     is_dimension(B).
 
 is_dimension([**, A, B]) :-
+    is_siu(A),
+    !,
+    number(B).
+
+is_dimension([**, A, B]) :-
     prefix_expansion(A, _),
     number(B).
 
 is_dimension(D) :-
     atom(D),
-    is_siu(D).
+    is_siu(D),
+    !.
 
 is_dimension(X):-
     atom(X),
