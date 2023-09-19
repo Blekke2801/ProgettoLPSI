@@ -1,32 +1,3 @@
-%banana
-trim(L, N, S) :-
-    length(P, N),
-    append(P, S, L).
-
-convert_to_sortable([], []).
-
-convert_to_sortable(['(' | As], List) :-
-    unifyp(As, Ns),
-    length(Ns, Int),
-    Int1 is Int + 2,
-    trim(['(' | As], Int1, NewAs),
-    append([['(' | As]], NewAs, L),
-    convert_to_sortable(L, List).
-
-convert_to_sortable([A | As], List) :-
-    \+(number(A)),
-    atom_number(A,_),
-    !,
-    unifyns([A | As], Ns),
-    length(Ns, Int),
-    trim([A | As], Int, NewAs),
-    number_chars(Number, Ns),
-    append([Number], NewAs, L),
-    convert_to_sortable(L, List).
-
-convert_to_sortable([A | As], [A | List]) :-
-    convert_to_sortable(As, List).
-
 unifyp([], []).
 
 unifyp([')' | _],[]) :-
@@ -296,33 +267,6 @@ compare_units(>, U1, U2) :-
     \+is_base_siu(U1),
     \+is_base_siu(U2).
 
-norm([], []).
-
-/*norm(Dim, Dim):-
-    atom(Dim),
-    is_siu(Dim).
-
-norm(['(', A, '*', B | Rest], ['(', A, '*', B | RestOut]);
-norm([A, '*', B | Rest], [A, '*', B | RestOut]) :-
-    compare_units(>, A, B),
-    norm(Rest, RestOut).
-
-norm(['(', A, '*', B | Rest], ['(', (A ** 2) | RestOut]);
-norm([A, '*', B | Rest], [(A ** 2) | RestOut]) :-
-    compare_units(=, A, B),
-    norm(Rest, RestOut).
-
-norm(['(', A, '*', B | Rest], ['(', B, '*', A | RestOut]);
-norm([A, '*', B | Rest], [B, '*', A | RestOut]) :-
-    compare_units(<, A, B),
-    norm(Rest, RestOut).
-
-norm(Dim, NewDim) :-
-    is_dimension(Dim),
-    with_output_to(chars(C), write(Dim)),
-    convert_to_sortable(C, SemiDim),
-    norm(SemiDim, NewDim).*/
-
 qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
     is_quantity(q(N1, D1)),
     number(N2),
@@ -401,18 +345,18 @@ uexpt(U, N, UR):-
 
 unify_units([], []).
 unify_units([X],[X]).
-unify_units([X, X | Rest],[(X ** 2) | NRest]):-
+unify_units([X, X | Rest],[[X ** 2] | NRest]):-
     !,
     is_siu(X),
     unify_units(Rest, NRest).
 
-unify_units([X ** N, X | Rest],[(X ** N1) | NRest]):-
+unify_units([X ** N, X | Rest],[[X ** N1] | NRest]):-
     !,
     is_siu(X),
     N1 is N + 1,
     unify_units(Rest, NRest).
 
-unify_units([X, X ** N | Rest],[(X ** N1) | NRest]):-
+unify_units([X, X ** N | Rest],[[X ** N1] | NRest]):-
     !,
     is_siu(X),
     N1 is N + 1,
@@ -424,7 +368,7 @@ unify_units([X ** N1, X ** N2 | Rest],NRest):-
     !,
     unify_units(Rest, NRest).
 
-unify_units([X ** N1, X ** N2 | Rest],[(X ** NR) | NRest]):-
+unify_units([X ** N1, X ** N2 | Rest],[[X ** NR] | NRest]):-
     !,
     is_siu(X),
     NR is N1 + N2,
@@ -454,37 +398,147 @@ divide([A, B | R], [A | Ra], [B | Rb]) :-
 my_merge(A, [], A).
 my_merge([], B, B).
 
+my_merge([A | Ra], [B | Rb], [AS | M]) :-
+    is_list(A),
+    \+is_list(B),
+    merge_sort(A, AS),
+    my_merge(Ra, [B | Rb], M).
+
+my_merge([A | Ra], [B | Rb], [A | M]) :-
+    \+is_list(A),
+    is_list(B),
+    merge_sort(B, BS),
+    my_merge(Ra, [BS | Rb], M).
+
+my_merge([A | Ra], [B | Rb], [AS | M]) :-
+    is_list(A),
+    is_list(B),
+    merge_sort(A, AS),
+    merge_sort(B, BS),
+    my_merge(Ra, [BS | Rb], M).
+
+my_merge([A | Ra], [[B, N] | Rb], [A | M]) :-
+    number(N),
+    compare_units(>, A, B),
+    my_merge(Ra, [[B, N] | Rb], M).
+
+my_merge([[A, N] | Ra], [B | Rb], [[A, N] | M]) :-
+    number(N),
+    compare_units(>, A, B),
+    my_merge(Ra, [B | Rb], M).
+
+my_merge([[A, N1] | Ra], [[B, N2] | Rb], [[A, N1] | M]) :-
+    number(N1),
+    number(N2),
+    compare_units(>, A, B),
+    my_merge(Ra, [[B, N2] | Rb], M).
+
 my_merge([A | Ra], [B | Rb], [A | M]) :-
   compare_units(>, A, B),
   my_merge(Ra, [B | Rb], M).
 
+my_merge([A | Ra], [[B, N] | Rb], [[B, N] | M]) :-
+    number(N),
+    compare_units(<, A, B),
+    my_merge(Ra, [A | Rb], M).
+
+my_merge([[A, N] | Ra], [B | Rb], [B | M]) :-
+    number(N),
+    compare_units(<, A, B),
+    my_merge(Ra, [[A, N] | Rb], M).
+
+my_merge([[A, N1] | Ra], [[B, N2] | Rb], [[B, N2] | M]) :-
+    number(N1),
+    number(N2),
+    compare_units(<, A, B),
+    my_merge(Ra, [[A, N1] | Rb], M).
+
 my_merge([A | Ra], [B | Rb], [B | M]) :-
   compare_units(<, A, B),
   my_merge([A | Ra], Rb, M).
+
+  my_merge([A | Ra], [[A, N] | Rb], [[A, N] | M]) :-
+    number(N),
+    my_merge(Ra, [A | Rb], M).
+
+my_merge([[A, N] | Ra], [A | Rb], [A | M]) :-
+    number(N),
+    my_merge(Ra, [[A, N] | Rb], M).
+
+my_merge([[A, N1] | Ra], [[A, N2] | Rb], [[A, N2] | M]) :-
+    number(N1),
+    number(N2),
+    my_merge(Ra, [[A, N1] | Rb], M).
 
 my_merge([A | Ra], [A | Rb], [A | M]) :-
   my_merge(Ra, [A | Rb], M).
 
 
 % Predicato per ordinare una moltiplicazione mantenendo le parentesi
-sort_multiplication(Expr, SortedExpr) :-
-    expression_to_list(Expr, FactorList),
+norm(Expr, SortedExpr) :-
+    extract_elements(Expr, FactorList),
     merge_sort(FactorList, SortedFactorList),
     unify_units(SortedFactorList, UnifiedList),
     list_to_expression(UnifiedList, SortedExpr).
 
 % Predicato per convertire un'espressione in una lista di fattori
-expression_to_list(Expr, [Expr]) :-
-    atomic(Expr),!.
-expression_to_list(Expr, FactorList) :-
-    compound(Expr),
-    Expr =.. [*, X, Y],
-    expression_to_list(X, XList),
-    expression_to_list(Y, YList),
-    append(XList, YList, FactorList).
+extract_elements(A, [A]):-
+    atom(A),
+    !.
+
+extract_elements(A**N, [A**N]):-
+    number(N),
+    atom(A),
+    !.
+
+extract_elements(Comp, List):-
+    compound(Comp),
+    compound_name_arguments(Comp, *, [A, B]),
+    extract_elements(A, L1),
+    atom(B),
+    !,
+    append(L1, [B], List).
+
+extract_elements(Comp, List):-
+    compound(Comp),
+    compound_name_arguments(Comp, *, [A, B]),
+    extract_elements(A, L1),
+    compound(B),
+    !,
+    extract_elements(B, L2),    
+    append(L1, [L2], List).
 
 % Predicato per convertire una lista di fattori in un'espressione
+list_to_expression([A**N], (A**N)):-!.
 list_to_expression([Factor], Factor):-!.
-list_to_expression([Factor1, Factor2 | Rest], (Expr)) :-
+
+list_to_expression([Factor1, Factor2 | Rest], Expr) :-
+        \+is_list(Factor1),
+        is_list(Factor2),
+        !,
+        list_to_expression(Factor2, NewFactor),
+        list_to_expression([Factor1 * (NewFactor) | Rest], SubExpr),
+        Expr = SubExpr.
+
+list_to_expression([Factor1, Factor2 | Rest], Expr) :-
+    is_list(Factor1),
+    \+is_list(Factor2),
+    !,
+    list_to_expression(Factor1, NewFactor),
+    list_to_expression([(NewFactor) * Factor2 | Rest], SubExpr),
+    Expr = SubExpr.
+
+list_to_expression([Factor1, Factor2 | Rest], Expr) :-
+    is_list(Factor1),
+    is_list(Factor2),
+    !,
+    list_to_expression(Factor1, NewFactor1),
+    list_to_expression(Factor2, NewFactor2),
+    list_to_expression([(NewFactor1) * (NewFactor2) | Rest], SubExpr),
+    Expr = SubExpr.
+
+list_to_expression([Factor1, Factor2 | Rest], Expr) :-
     list_to_expression([Factor1 * Factor2 | Rest], SubExpr),
     Expr = SubExpr.
+
+    
