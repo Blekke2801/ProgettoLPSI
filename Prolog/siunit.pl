@@ -314,8 +314,6 @@ qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
     siu_base_expansion(D1, DC1),
     siu_base_expansion(D2, DC2),*/
 
-
-
 qexpt(q(Number,U), N, q(NR, UR)):-
     is_quantity(q(Number,U)),
     integer(N),
@@ -341,34 +339,32 @@ uexpt(U, N, UR):-
     uexpt(Y, N, UR2),
     UR = [*, UR1, UR2].
 
-
-
 unify_units([], []).
 unify_units([X],[X]).
-unify_units([X, X | Rest],[[X ** 2] | NRest]):-
+unify_units([X, X | Rest],[[X, 2] | NRest]):-
     !,
     is_siu(X),
     unify_units(Rest, NRest).
 
-unify_units([X ** N, X | Rest],[[X ** N1] | NRest]):-
-    !,
-    is_siu(X),
-    N1 is N + 1,
-    unify_units(Rest, NRest).
-
-unify_units([X, X ** N | Rest],[[X ** N1] | NRest]):-
+unify_units([X ** N, X | Rest],[[X, N1] | NRest]):-
     !,
     is_siu(X),
     N1 is N + 1,
     unify_units(Rest, NRest).
 
-unify_units([X ** N1, X ** N2 | Rest],NRest):-
+unify_units([X, X ** N | Rest],[[X, N1] | NRest]):-
+    !,
+    is_siu(X),
+    N1 is N + 1,
+    unify_units(Rest, NRest).
+
+unify_units([X ** N1, X ** N2 | Rest], NRest):-
     is_siu(X),
     0 is N1 + N2,
     !,
     unify_units(Rest, NRest).
 
-unify_units([X ** N1, X ** N2 | Rest],[[X ** NR] | NRest]):-
+unify_units([X ** N1, X ** N2 | Rest],[[X, NR] | NRest]):-
     !,
     is_siu(X),
     NR is N1 + N2,
@@ -376,8 +372,6 @@ unify_units([X ** N1, X ** N2 | Rest],[[X ** NR] | NRest]):-
 
 unify_units([X, Y | Rest], [X, Y | NRest]) :-
     unify_units(Rest, NRest).
-
-
 
 % Merge Sort Base
 merge_sort([], []). 
@@ -473,7 +467,6 @@ my_merge([[A, N1] | Ra], [[A, N2] | Rb], [[A, N2] | M]) :-
 my_merge([A | Ra], [A | Rb], [A | M]) :-
   my_merge(Ra, [A | Rb], M).
 
-
 % Predicato per ordinare una moltiplicazione mantenendo le parentesi
 norm(Expr, SortedExpr) :-
     extract_elements(Expr, FactorList),
@@ -486,7 +479,7 @@ extract_elements(A, [A]):-
     atom(A),
     !.
 
-extract_elements(A**N, [A**N]):-
+extract_elements(A**N, [A, N]):-
     number(N),
     atom(A),
     !.
@@ -509,8 +502,10 @@ extract_elements(Comp, List):-
     append(L1, [L2], List).
 
 % Predicato per convertire una lista di fattori in un'espressione
-list_to_expression([A**N], (A**N)):-!.
-list_to_expression([Factor], Factor):-!.
+list_to_expression([Factor], Factor):- !.
+list_to_expression([A, N], A**N):- 
+    number(N),
+    !.
 
 list_to_expression([Factor1, Factor2 | Rest], Expr) :-
         \+is_list(Factor1),
@@ -539,6 +534,4 @@ list_to_expression([Factor1, Factor2 | Rest], Expr) :-
 
 list_to_expression([Factor1, Factor2 | Rest], Expr) :-
     list_to_expression([Factor1 * Factor2 | Rest], SubExpr),
-    Expr = SubExpr.
-
-    
+    Expr = SubExpr. 
