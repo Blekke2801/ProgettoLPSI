@@ -1,24 +1,3 @@
-unifyp([], []).
-
-unifyp([')' | _],[]) :-
-    !.
-
-unifyp([A | As], [A | Ns]) :-
-    unifyp(As,  Ns).
-
-unifyns([], []).
-
-unifyns([A | As], [A | Ns]) :-
-    atom_number(A, _),
-    !,
-    unifyns(As,  Ns).
-
-unifyns(['.' | As], ['.' | Ns]) :-
-    unifyns(As,  Ns).
-
-unifyns(_, []) :-
-    !.
-
 expand_all(D, DR) :-
     is_dimension(D),
     D =.. [*, A, B],
@@ -347,6 +326,7 @@ uexpt(U, N, UR):-
 
 unify_units([], []).
 unify_units([X], [X]).
+
 unify_units([X, X | Rest],[[X, 2] | NRest]):-
     !,
     is_siu(X),
@@ -536,12 +516,12 @@ list_to_expression([A, N], (A ** N)):-
     !.
 
 list_to_expression([Factor1, Factor2 | Rest], Expr) :-
-        \+is_list(Factor1),
-        is_list(Factor2),
-        !,
-        list_to_expression(Factor2, NewFactor),
-        list_to_expression([Factor1 * (NewFactor) | Rest], SubExpr),
-        Expr = SubExpr.
+    \+is_list(Factor1),
+    is_list(Factor2),
+    !,
+    list_to_expression(Factor2, NewFactor),
+    list_to_expression([Factor1 * (NewFactor) | Rest], SubExpr),
+    Expr = SubExpr.
 
 list_to_expression([Factor1, Factor2 | Rest], Expr) :-
     is_list(Factor1),
@@ -562,4 +542,4 @@ list_to_expression([Factor1, Factor2 | Rest], Expr) :-
 
 list_to_expression([Factor1, Factor2 | Rest], Expr) :-
     list_to_expression([Factor1 * Factor2 | Rest], SubExpr),
-    Expr = SubExpr. 
+    Expr = SubExpr.
