@@ -303,8 +303,8 @@ qexpt(q(Number,U), N, q(NR, UR)):-
     is_quantity(q(Number,U)),
     integer(N),
     NR is Number ** N,
-    uexpt(U, N, URN),
-    norm(URN, UR).
+    norm(U, URN),
+    uexpt(URN, N, UR).
 
 uexpt(SI ** E, N, SI ** N1):-
     is_siu(SI),
@@ -466,6 +466,16 @@ my_merge([A | Ra], [A | Rb], [A | M]) :-
   my_merge(Ra, [A | Rb], M).
 
 % Predicato per ordinare una moltiplicazione mantenendo le parentesi
+norm(A**N, A**N):-
+    is_siu(A),
+    number(N).
+
+norm(A,A):-
+    is_siu(A).
+
+norm(A , A):-
+    prefix_expansion(A, _).
+
 norm(Expr, SortedExpr) :-
     is_dimension(Expr),
     extract_elements(Expr, FactorList),
