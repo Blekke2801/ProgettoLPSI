@@ -229,7 +229,13 @@ is_quantity(q(N, D)) :-
     number(N),
     is_dimension(D).
 
-compare_units(=, U, U):-!.
+%%% Dovete comparare solo se le unità sono composte da untià base. Le unità si confrontano secondo l'ordine lessicografico, non quello della tabella.
+
+%%% A presto
+    
+%%% Marco Antoniotti
+
+compare_units(=, U, U):- !.
 
 compare_units(<,'C',dc).
 compare_units(>,dc,'C').
@@ -346,25 +352,25 @@ unify_units([X, X | Rest],[[X, 2] | NRest]):-
     is_siu(X),
     unify_units(Rest, NRest).
 
-unify_units([X ** N, X | Rest],[[X, N1] | NRest]):-
+unify_units([[X, N], X | Rest],[[X, N1] | NRest]):-
     !,
     is_siu(X),
     N1 is N + 1,
     unify_units(Rest, NRest).
 
-unify_units([X, X ** N | Rest],[[X, N1] | NRest]):-
+unify_units([X, [X, N] | Rest],[[X, N1] | NRest]):-
     !,
     is_siu(X),
     N1 is N + 1,
     unify_units(Rest, NRest).
 
-unify_units([X ** N1, X ** N2 | Rest], NRest):-
+unify_units([[X, N1], [X, N2] | Rest], NRest):-
     is_siu(X),
     0 is N1 + N2,
     !,
     unify_units(Rest, NRest).
 
-unify_units([X ** N1, X ** N2 | Rest],[[X, NR] | NRest]):-
+unify_units([[X, N1], [X, N2] | Rest],[[X, NR] | NRest]):-
     !,
     is_siu(X),
     NR is N1 + N2,
@@ -469,6 +475,7 @@ my_merge([A | Ra], [A | Rb], [A | M]) :-
 
 % Predicato per ordinare una moltiplicazione mantenendo le parentesi
 norm(Expr, SortedExpr) :-
+    is_dimension(Expr),
     extract_elements(Expr, FactorList),
     merge_sort(FactorList, SortedFactorList),
     unify_units(SortedFactorList, UnifiedList),
@@ -477,33 +484,25 @@ norm(Expr, SortedExpr) :-
 % Predicato per convertire un'espressione in una lista di fattori
 extract_elements(A, [A]):-
     atom(A),
+    is_siu(A),
     !.
 
-extract_elements(A**N, [A, N]):-
+extract_elements(A**N, [[A, N]]):-
     number(N),
     atom(A),
+    is_siu(A),
     !.
 
 extract_elements(Comp, List):-
     compound(Comp),
     compound_name_arguments(Comp, *, [A, B]),
     extract_elements(A, L1),
-    atom(B),
-    !,
-    append(L1, [B], List).
-
-extract_elements(Comp, List):-
-    compound(Comp),
-    compound_name_arguments(Comp, *, [A, B]),
-    extract_elements(A, L1),
-    compound(B),
-    !,
-    extract_elements(B, L2),    
-    append(L1, [L2], List).
+    extract_elements(B,L2),
+    append(L1, L2, List).
 
 % Predicato per convertire una lista di fattori in un'espressione
 list_to_expression([Factor], Factor):- !.
-list_to_expression([A, N], A**N):- 
+list_to_expression([A, N], (A ** N)):- 
     number(N),
     !.
 
