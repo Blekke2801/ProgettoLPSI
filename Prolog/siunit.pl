@@ -136,14 +136,19 @@ siu_base_expansion('Wb', kg * (m ** 2) * s  ** -2 * ('A'  ** -1)).
 
 prefix_expansion(kg,g*10**3):-!.
 
+prefix_expansion(Var, Var*10**0):-
+    is_siu(Var).
+
 prefix_expansion(Final, Exp) :-
-    atom_length(Final,L),
+    atom(Final),
+    atom_length(Final, L),
     L>1,
     atom_concat(k,Unit,Final),
     is_siu(Unit),
     Exp =.. [*,Unit,10**3],!.
 
 prefix_expansion(Final, Exp) :-
+    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(h,Unit,Final),
@@ -151,6 +156,7 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**2],!.
 
 prefix_expansion(Final, Exp) :-
+    atom(Final),
     atom_length(Final,L),
     L>2,
     atom_concat(da,Unit,Final),
@@ -158,6 +164,7 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**1],!.
 
 prefix_expansion(Final, Exp) :-
+    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(d,Unit,Final),
@@ -165,6 +172,7 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**(-1)],!.
 
 prefix_expansion(Final, Exp) :-
+    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(c,Unit,Final),
@@ -172,6 +180,7 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**(-2)],!.
 
 prefix_expansion(Final, Exp) :-
+    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(m,Unit,Final),
@@ -191,13 +200,17 @@ is_dimension([*, A, B]) :-
     is_dimension(B).
 
 is_dimension([**, A, B]) :-
-    is_siu(A),
+    prefix_expansion(A, _),
     number(B).
 
 is_dimension(D) :-
     atom(D),
-    !,
     is_siu(D).
+
+is_dimension(X):-
+    atom(X),
+    !,
+    prefix_expansion(X, _).
 
 is_dimension(D) :-
     compound(D),
@@ -260,12 +273,22 @@ qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
 
 qsum(q(N1, D1), q(N2, D2), q(NR, DC)) :-
     is_quantity(q(N1, D1)),
+    is_quantity(q(N2, D2)),
     norm(D2, D2C),
     norm(D1, D1C),
     expand_all(D2C, DC),
     expand_all(D1C, DC),
-    number(N2),
     NR is N1 + N2.
+
+qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
+    is_quantity(q(N1, D1)),
+    is_quantity(q(N2, D2)),
+    prefix_expansion(D1,DP*10**E1),
+    prefix_expansion(D2,DP*10**E2),
+    NR1 is N1*(10**E1),
+    NR2 is N2*(10**E2),
+    NR is NR1 + NR2.
+
 
 qsub(q(N1, D1), q(N2, D1), q(NR, DR)) :-
     is_quantity(q(N1, D1)),
@@ -280,14 +303,30 @@ qsub(q(N1, D1), q(N2, D2), q(NR, D1)) :-
     siu_base_expansion(D1, DC),
     NR is N1 - N2.
 
-qsub(q(N1, D2), q(N2, D1), q(NR, D1)) :-
-    is_quantity(q(N1, D2)),
-    is_quantity(q(N2, D1)),
-    norm(D2, DC),
-    siu_base_expansion(D1, DC),
-    NR is N1 - N2.
+qsub(q(N1, D1), q(N2, D2), q(NR, DP)):-
+    is_quantity(q(N1, D1)),
+    is_quantity(q(N2, D2)),
+    prefix_expansion(D1,DP*10**E1),
+    prefix_expansion(D2,DP*10**E2),
+    NR1 is N1*(10**E1),
+    NR2 is N2*(10**E2),
+    NR1 > NR2,
+    NR is NR1 - NR2.
 
-/*qtimes(q(N1, D1), q(N2, D1), q(NR, DR)) :-
+qsub(q(N1, D1), q(N2, D2), _):-
+    is_quantity(q(N1, D1)),
+    is_quantity(q(N2, D2)),
+    prefix_expansion(D1,DP*10**E1),
+    prefix_expansion(D2,DP*10**E2),
+    NR1 is N1*(10**E1),
+    NR2 is N2*(10**E2),
+    NR1 < NR2,
+    write('Non puo\' andare sotto zero, viva il 42'),
+    !,
+    false.
+
+
+qtimes(q(N1, D1), q(N2, D1), q(NR, DR)) :-
     is_quantity(q(N1, D1)),
     number(N2),
     qexpt(q(N1, D1), 2, DR),
@@ -295,9 +334,9 @@ qsub(q(N1, D2), q(N2, D1), q(NR, D1)) :-
 
 qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
     is_quantity(q(N1, D1)),
-    is_quantity(q(N1, D1)),
-    siu_base_expansion(D1, DC1),
-    siu_base_expansion(D2, DC2),*/
+    is_quantity(q(N2, D2)),
+    norm(D1*D2, DR),
+    NR is N1*N2.
 
 qexpt(q(Number,U), N, q(NR, UR)):-
     is_quantity(q(Number,U)),
@@ -307,13 +346,13 @@ qexpt(q(Number,U), N, q(NR, UR)):-
     uexpt(URN, N, UR).
 
 uexpt(SI ** E, N, SI ** N1):-
-    is_siu(SI),
+    prefix_expansion(SI, _),
     number(N),
     number(E),
     N1 is N*E.
 
 uexpt(SI, N, SI ** N):-
-    is_siu(SI),
+    prefix_expansion(SI, _),
     number(N).
 
 uexpt(U, N, UR):-
@@ -467,14 +506,17 @@ my_merge([A | Ra], [A | Rb], [A | M]) :-
 
 % Predicato per ordinare una moltiplicazione mantenendo le parentesi
 norm(A**N, A**N):-
-    is_siu(A),
-    number(N).
+    prefix_expansion(A, _),
+    number(N),
+    !.
 
-norm(A,A):-
-    is_siu(A).
+norm(A, A):-
+    is_siu(A),
+    !.
 
 norm(A , A):-
-    prefix_expansion(A, _).
+    prefix_expansion(A, _),
+    !.
 
 norm(Expr, SortedExpr) :-
     is_dimension(Expr),
@@ -494,6 +536,7 @@ extract_elements(A**N, [[A, N]]):-
     atom(A),
     is_siu(A),
     !.
+
 extract_elements(Comp, List):-
     compound(Comp),
     compound_name_arguments(Comp, *, [A, B**N]),
@@ -553,3 +596,4 @@ list_to_expression([Factor1, Factor2 | Rest], Expr) :-
 list_to_expression([Factor1, Factor2 | Rest], Expr) :-
     list_to_expression([Factor1 * Factor2 | Rest], SubExpr),
     Expr = SubExpr.
+
