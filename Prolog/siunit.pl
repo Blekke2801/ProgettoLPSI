@@ -1,38 +1,57 @@
+expand_all(D, D) :-
+    is_base_siu(D),
+    !.
+
+expand_all(D, DR)  :-
+    siu_base_expansion(D, DR),
+    !.
+
 expand_all(D, DR) :-
-    is_dimension(D),
-    D =.. [*, A, B],
-    atom(A),
+    prefix_expansion(D, DR),
+    !.
+
+expand_all(A**N, DR):-
+    siu_base_expansion(A, DRM),
+    !,
+    uexpt(DRM, N, DR).
+
+expand_all(A**N, DR):-
+    prefix_expansion(A, DRM),
+    !,
+    uexpt(DRM, N, DR).
+
+expand_all([*, A, B], DR) :-
     siu_base_expansion(A, DA),
+    siu_base_expansion(B, DB),
+    !,
+    DR =.. [*, DA, DB].
+
+expand_all([*, A, B], DR) :-
+    siu_base_expansion(A, DA),
+    !,
     compound(B),
+    !,
+    expand_all(B, DB),
+    DR =.. [*, DA, DB].
+
+expand_all([*, A, B], DR) :-
+    compound(A),
+    siu_base_expansion(B, DB),
+    !,
+    expand_all(A, DA),
+    DR =.. [*, DA, DB].
+
+expand_all([*, A, B], DR) :-
+    compound(A),
+    compound(B),
+    expand_all(A, DA),
     expand_all(B, DB),
     DR =.. [*, DA, DB].
 
 expand_all(D, DR) :-
     is_dimension(D),
     D =.. [*, A, B],
-    compound(A),
-    expand_all(A, DA),
-    atom(B),
-    siu_base_expansion(B, DB),
-    DR =.. [*, DA, DB].
-
-expand_all(D, DR) :-
-    is_dimension(D),
-    D =.. [*, A, B],
-    atom(A),
-    siu_base_expansion(A, DA),
-    atom(B),
-    siu_base_expansion(B, DB),
-    DR =.. [*, DA, DB].
-
-expand_all(D, DR) :-
-    is_dimension(D),
-    D =.. [*, A, B],
-    compound(A),
-    expand_all(A, DA),
-    compound(B),
-    expand_all(B, DB),
-    DR =.. [*, DA, DB].
+    expand_all([*, A, B], DR).
 
 is_base_siu(kg).
 is_base_siu(m).
@@ -134,13 +153,17 @@ siu_base_expansion('V', kg * (m ** 2) * (s  ** -3) * ('A'  ** -1)).
 siu_base_expansion('W', kg * (m ** 2) * (s  ** -3)).
 siu_base_expansion('Wb', kg * (m ** 2) * s  ** -2 * ('A'  ** -1)).
 
+prefix_expansion(Final, _) :-
+    \+atom(Final),
+    !,
+    false.
+
 prefix_expansion(kg,g*10**3):-!.
 
 prefix_expansion(Var, Var*10**0):-
     is_siu(Var).
 
 prefix_expansion(Final, Exp) :-
-    atom(Final),
     atom_length(Final, L),
     L>1,
     atom_concat(k,Unit,Final),
@@ -148,7 +171,6 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**3],!.
 
 prefix_expansion(Final, Exp) :-
-    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(h,Unit,Final),
@@ -156,7 +178,6 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**2],!.
 
 prefix_expansion(Final, Exp) :-
-    atom(Final),
     atom_length(Final,L),
     L>2,
     atom_concat(da,Unit,Final),
@@ -164,7 +185,6 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**1],!.
 
 prefix_expansion(Final, Exp) :-
-    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(d,Unit,Final),
@@ -172,7 +192,6 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**(-1)],!.
 
 prefix_expansion(Final, Exp) :-
-    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(c,Unit,Final),
@@ -180,7 +199,6 @@ prefix_expansion(Final, Exp) :-
     Exp =.. [*,Unit,10**(-2)],!.
 
 prefix_expansion(Final, Exp) :-
-    atom(Final),
     atom_length(Final,L),
     L>1,
     atom_concat(m,Unit,Final),
@@ -367,7 +385,7 @@ uexpt(U, N, UR):-
     U =.. [*, X, Y],
     uexpt(X, N, UR1),
     uexpt(Y, N, UR2),
-    UR = [*, UR1, UR2].
+    UR =.. [*, UR1, UR2].
 
 unify_units([], []).
 unify_units([X], [X]).
