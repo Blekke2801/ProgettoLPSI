@@ -229,11 +229,11 @@ is_quantity(q(N, D)) :-
     number(N),
     is_dimension(D).
 
-%%% Dovete comparare solo se le unità sono composte da untià base. Le unità si confrontano secondo l'ordine lessicografico, non quello della tabella.
+%%% Dovete comparare solo se le unità sono composte da unità base. Le unità si confrontano secondo l'ordine lessicografico, non quello della tabella.
 
 %%% A presto
     
-%%% Marco Antoniotti
+%%% Marco Antoniotti venerdì, 1 settembre 2023, 15:05
 
 compare_units(=, U, U):- !.
 
@@ -346,34 +346,46 @@ uexpt(U, N, UR):-
     UR = [*, UR1, UR2].
 
 unify_units([], []).
-unify_units([X],[X]).
+unify_units([X], [X]).
 unify_units([X, X | Rest],[[X, 2] | NRest]):-
     !,
     is_siu(X),
     unify_units(Rest, NRest).
 
 unify_units([[X, N], X | Rest],[[X, N1] | NRest]):-
-    !,
     is_siu(X),
+    number(N),
+    !,
     N1 is N + 1,
     unify_units(Rest, NRest).
 
 unify_units([X, [X, N] | Rest],[[X, N1] | NRest]):-
-    !,
     is_siu(X),
+    number(N),
+    !,
     N1 is N + 1,
     unify_units(Rest, NRest).
 
 unify_units([[X, N1], [X, N2] | Rest], NRest):-
     is_siu(X),
+    number(N1),
+    number(N2),
     0 is N1 + N2,
     !,
     unify_units(Rest, NRest).
 
 unify_units([[X, N1], [X, N2] | Rest],[[X, NR] | NRest]):-
-    !,
     is_siu(X),
+    number(N1),
+    number(N2),
+    !,
     NR is N1 + N2,
+    unify_units(Rest, NRest).
+
+unify_units([X | Rest], [XU | NRest]) :-
+    is_list(X),
+    !,
+    unify_units(X, XU),
     unify_units(Rest, NRest).
 
 unify_units([X, Y | Rest], [X, Y | NRest]) :-
@@ -492,12 +504,29 @@ extract_elements(A**N, [[A, N]]):-
     atom(A),
     is_siu(A),
     !.
+extract_elements(Comp, List):-
+    compound(Comp),
+    compound_name_arguments(Comp, *, [A, B**N]),
+    atom(B),
+    !,
+    extract_elements(A, L1),
+    extract_elements(B**N, L2),
+    append(L1, L2, List).
+
+extract_elements(Comp, List):-
+    compound(Comp),
+    compound_name_arguments(Comp, *, [A, B]),
+    compound(B),
+    !,
+    extract_elements(A, L1),
+    extract_elements(B, L2),
+    append(L1, [L2], List).
 
 extract_elements(Comp, List):-
     compound(Comp),
     compound_name_arguments(Comp, *, [A, B]),
     extract_elements(A, L1),
-    extract_elements(B,L2),
+    extract_elements(B, L2),
     append(L1, L2, List).
 
 % Predicato per convertire una lista di fattori in un'espressione
