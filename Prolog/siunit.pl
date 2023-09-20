@@ -1,7 +1,7 @@
 expand_all(D, D) :-
     is_base_siu(D),
     !.
-
+%banana
 expand_all(D, DR)  :-
     siu_base_expansion(D, DR),
     !.
