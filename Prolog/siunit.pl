@@ -70,7 +70,7 @@ is_siu(g).
 is_siu('Gy').
 is_siu('Hz').
 is_siu('H').
-is_siu('J').    
+is_siu('J').
 is_siu(kat).
 is_siu(lm).
 is_siu(lx).
@@ -174,7 +174,7 @@ prefix_expansion(Final, _) :-
     L =< 1,
     !,
     false.
-    
+
 prefix_expansion(Final, Exp) :-
     atom_concat(k, Unit, Final),
     is_siu(Unit),
@@ -298,41 +298,41 @@ compare_units(>, m, X):-
     X \= kg,
     !.
 
-compare_units(<, X, m):- 
+compare_units(<, X, m):-
     compare_units(>, m, X),
     !.
 
-compare_units(>, s, X):- 
+compare_units(>, s, X):-
     X \= kg,
     X \= m,
     !.
 
-compare_units(<, X, s):- 
+compare_units(<, X, s):-
     compare_units(>, s, X),
     !.
 
-compare_units(>, 'A', X):- 
+compare_units(>, 'A', X):-
     X \= kg,
     X \= m,
     X \= s,
     !.
 
-compare_units(<, X, 'A'):- 
+compare_units(<, X, 'A'):-
     compare_units(>, 'A', X),
     !.
 
-compare_units(>, 'K', X):- 
+compare_units(>, 'K', X):-
     X \= kg,
     X \= m,
     X \= 'A',
     X \= s,
     !.
 
-compare_units(<, X, 'K'):- 
+compare_units(<, X, 'K'):-
     compare_units(>, 'K', X),
     !.
 
-compare_units(>, cd, X):- 
+compare_units(>, cd, X):-
     X \= kg,
     X \= m,
     X \= 'A',
@@ -340,7 +340,7 @@ compare_units(>, cd, X):-
     X \= s,
     !.
 
-compare_units(<, X, cd):- 
+compare_units(<, X, cd):-
     compare_units(>, cd, X),
     !.
 
@@ -348,7 +348,7 @@ compare_units(>, mol, X):-
     \+is_base_siu(X),
     !.
 
-compare_units(<, X, mol):- 
+compare_units(<, X, mol):-
     compare_units(>, m, X),
     !.
 
@@ -420,6 +420,24 @@ qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
     NR2 is N2*(10 ** E2),
     NR is NR1 + NR2.
 
+qsub(q(N1, D1), q(N2, D2), q(NR, DP)):-
+    prefix_expansion(D1,DP * 10  ** E1),
+    prefix_expansion(D2,DP * 10  ** E2),
+    NR1 is N1 * (10 ** E1),
+    NR2 is N2 * (10 ** E2),
+    NR1 > NR2,
+    NR is NR1 - NR2.
+
+qsub(q(N1, D1), q(N2, D2), _):-
+    prefix_expansion(D1,DP * 10  ** E1),
+    prefix_expansion(D2,DP * 10  ** E2),
+    NR1 is N1 * (10 ** E1),
+    NR2 is N2 * (10 ** E2),
+    NR1 < NR2,
+    write('Non puo\' andare sotto zero, viva il 42'),
+    !,
+    false.
+
 qsub(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
     !,
@@ -439,23 +457,6 @@ qsub(q(N1, D1), q(N2, D2), q(NR, D1)) :-
     siu_base_expansion(D1, DC),
     NR is N1 - N2.
 
-qsub(q(N1, D1), q(N2, D2), q(NR, DP)):-
-    prefix_expansion(D1,DP * 10  ** E1),
-    prefix_expansion(D2,DP * 10  ** E2),
-    NR1 is N1 * (10 ** E1),
-    NR2 is N2 * (10 ** E2),
-    NR1 > NR2,
-    NR is NR1 - NR2.
-
-qsub(q(N1, D1), q(N2, D2), _):-
-    prefix_expansion(D1,DP * 10  ** E1),
-    prefix_expansion(D2,DP * 10  ** E2),
-    NR1 is N1 * (10 ** E1),
-    NR2 is N2 * (10 ** E2),
-    NR1 < NR2,
-    write('Non puo\' andare sotto zero, viva il 42'),
-    !,
-    false.
 
 qtimes(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
@@ -519,7 +520,7 @@ qdiv(_, q(N, D), _) :-
     false.
 
 qdiv(_, q(N, _), _) :-
-    N \= 0,
+    N == 0,
     !,
     false.
 
@@ -578,7 +579,7 @@ unify_units([X, Y | Rest], [X | NRest]) :-
     unify_units([Y | Rest], NRest).
 
 % Merge Sort Base
-merge_sort([], []). 
+merge_sort([], []).
 merge_sort([A], [A]).
 
 merge_sort([A, B | Rest], S) :-
@@ -590,7 +591,7 @@ merge_sort([A, B | Rest], S) :-
 divide([], [], []).
 divide([A], [A], []).
 
-divide([A, B | R], [A | Ra], [B | Rb]) :-  
+divide([A, B | R], [A | Ra], [B | Rb]) :-
     divide(R, Ra, Rb).
 
 my_merge(A, [], A).
@@ -756,7 +757,7 @@ extract_elements(Comp, List):-
 
 % Predicato per convertire una lista di fattori in un'espressione
 list_to_expression([Factor], Factor):- !.
-list_to_expression([A, N], (A ** N)):- 
+list_to_expression([A, N], (A ** N)):-
     number(N),
     !.
 
