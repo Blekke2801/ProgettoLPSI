@@ -126,10 +126,6 @@ siu_name('Wb', 'Weber').
 siu_symbol(N, S) :-
     siu_name(S, N).
 
-siu_base_expansion(S, S) :-
-    is_base_siu(S),
-    !.
-
 siu_base_expansion('Bq', (s ** -1)).
 siu_base_expansion(dc, 'K').
 siu_base_expansion('C', s * 'A').
@@ -152,6 +148,10 @@ siu_base_expansion('T', kg * (s  ** -2) * ('A'  ** -1)).
 siu_base_expansion('V', kg * (m ** 2) * (s  ** -3) * ('A'  ** -1)).
 siu_base_expansion('W', kg * (m ** 2) * (s  ** -3)).
 siu_base_expansion('Wb', kg * (m ** 2) * s  ** -2 * ('A'  ** -1)).
+
+siu_base_expansion(S, S) :-
+    is_base_siu(S),
+    !.
 
 prefix_expansion(Final, _) :-
     \+atom(Final),
@@ -250,6 +250,38 @@ is_quantity(q(N, D)) :-
 %%% A presto
     
 %%% Marco Antoniotti venerdì, 1 settembre 2023, 15:05
+
+
+compare_units(_, _, B):-
+    \+is_siu(B),
+    !,
+    false.
+
+/*
+compare_units(>, kg, _):- !.
+compare_units(>, m, _):- !.
+compare_units(>, s, _):- !.
+compare_units(>, 'A', _):- !.
+compare_units(>, 'K', _):- !.
+compare_units(>, cd, _):- !.
+compare_units(>, mol, _):- !.
+*/
+
+compare_units(_, A, _):-
+    \+is_siu(A),
+    !,
+    false.
+
+/*
+    compare_units(<, _, kg):- !.
+    compare_units(<, _, m):- !.
+    compare_units(<, _, s):- !.
+    compare_units(<, _, 'A'):- !.
+    compare_units(<, _, 'K'):- !.
+    compare_units(<, _, cd):- !.
+    compare_units(<, _, mol):- !.
+
+*/
 
 compare_units(=, U, U):- !.
 
