@@ -508,17 +508,17 @@ uexpt(U, N, UR):-
     uexpt(Y, N, UR2),
     UR =.. [*, UR1, UR2].
 
-qtimes(q(N, D), _, _) :-
+qdiv(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
     !,
     false.
 
-qtimes(_, q(N, D), _) :-
+qdiv(_, q(N, D), _) :-
     \+is_quantity(q(N, D)),
     !,
     false.
 
-qtimes(_, q(N, D), _) :-
+qdiv(_, q(N, _), _) :-
     N \= 0,
     !,
     false.
