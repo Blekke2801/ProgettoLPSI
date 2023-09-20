@@ -229,6 +229,11 @@ is_dimension([**, A, B]) :-
     is_dimension(A),
     number(B).
 
+is_dimension([**, A, B]) :-
+	!,
+	is_dimension(A),
+	number(B).
+
 is_dimension(D) :-
     atom(D),
     is_siu(D),
