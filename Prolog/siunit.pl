@@ -392,15 +392,21 @@ compare_units(>, U1, U2) :-
     \+is_base_siu(U1),
     \+is_base_siu(U2).
 
+qsum(q(N, D), _, _) :-
+    \+is_quantity(q(N1, D1)),
+    !,
+    false.
+
+qsum(_, q(N, D), _) :-
+    \+is_quantity(q(N1, D1)),
+    !,
+    false.
+
 qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
-    is_quantity(q(N1, D1)),
-    number(N2),
     norm(D1, DR),
     NR is N1 + N2.
 
 qsum(q(N1, D1), q(N2, D2), q(NR, DC)) :-
-    is_quantity(q(N1, D1)),
-    is_quantity(q(N2, D2)),
     norm(D2, D2C),
     norm(D1, D1C),
     expand_all(D2C, DC),
@@ -408,31 +414,32 @@ qsum(q(N1, D1), q(N2, D2), q(NR, DC)) :-
     NR is N1 + N2.
 
 qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
-    is_quantity(q(N1, D1)),
-    is_quantity(q(N2, D2)),
     prefix_expansion(D1,DP * 10  ** E1),
     prefix_expansion(D2,DP * 10  ** E2),
     NR1 is N1*(10 ** E1),
     NR2 is N2*(10 ** E2),
     NR is NR1 + NR2.
 
+qsub(q(N, D), _, _) :-
+    \+is_quantity(q(N1, D1)),
+    !,
+    false.
+
+qsub(_, q(N, D), _) :-
+    \+is_quantity(q(N1, D1)),
+    !,
+    false.
 
 qsub(q(N1, D1), q(N2, D1), q(NR, DR)) :-
-    is_quantity(q(N1, D1)),
-    number(N2),
     norm(D1, DR),
     NR is N1 - N2.
 
 qsub(q(N1, D1), q(N2, D2), q(NR, D1)) :-
-    is_quantity(q(N1, D1)),
-    is_quantity(q(N2, D2)),
     norm(D2, DC),
     siu_base_expansion(D1, DC),
     NR is N1 - N2.
 
 qsub(q(N1, D1), q(N2, D2), q(NR, DP)):-
-    is_quantity(q(N1, D1)),
-    is_quantity(q(N2, D2)),
     prefix_expansion(D1,DP * 10  ** E1),
     prefix_expansion(D2,DP * 10  ** E2),
     NR1 is N1 * (10 ** E1),
@@ -441,8 +448,6 @@ qsub(q(N1, D1), q(N2, D2), q(NR, DP)):-
     NR is NR1 - NR2.
 
 qsub(q(N1, D1), q(N2, D2), _):-
-    is_quantity(q(N1, D1)),
-    is_quantity(q(N2, D2)),
     prefix_expansion(D1,DP * 10  ** E1),
     prefix_expansion(D2,DP * 10  ** E2),
     NR1 is N1 * (10 ** E1),
@@ -452,22 +457,35 @@ qsub(q(N1, D1), q(N2, D2), _):-
     !,
     false.
 
+qtimes(q(N, D), _, _) :-
+    \+is_quantity(q(N1, D1)),
+    !,
+    false.
+
+qtimes(_, q(N, D), _) :-
+    \+is_quantity(q(N1, D1)),
+    !,
+    false.
 
 qtimes(q(N1, D1), q(N2, D1), q(NR, DR)) :-
-    is_quantity(q(N1, D1)),
-    number(N2),
-    qexpt(q(N1, D1), 2, DR),
+    qexpt(q(N1, D1), 2, q(_, DR)),
     NR is N1 * N2.
 
 qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
-    is_quantity(q(N1, D1)),
-    is_quantity(q(N2, D2)),
-    norm(D1*D2, DR),
-    NR is N1*N2.
+    norm(D1 * D2, DR),
+    NR is N1 * N2.
+
+qexpt(q(N, D), _, _) :-
+    \+is_quantity(q(N1, D1)),
+    !,
+    false.
+
+qexpt(_, N, _) :-
+    \+integer(N),
+    !,
+    false.
 
 qexpt(q(Number,U), N, q(NR, UR)):-
-    is_quantity(q(Number,U)),
-    integer(N),
     NR is Number ** N,
     norm(U, URN),
     uexpt(URN, N, UR).
