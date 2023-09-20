@@ -111,7 +111,7 @@ siu_name(kat, 'Katal').
 siu_name(lm, lumen).
 siu_name(lx, lux).
 siu_name('N', 'Newton').
-siu_name('Omega', 'Ohm').
+siu_name('Omega', ohm).
 siu_name('Pa', 'Pascal').
 siu_name(rad, radian).
 siu_name('S', 'Siemens').
@@ -224,9 +224,14 @@ is_dimension([**, A, B]) :-
     number(B).
 
 is_dimension([**, A, B]) :-
-    !,
     prefix_expansion(A, _),
+	!,
     number(B).
+
+is_dimension([**, A, B]) :-
+	!,
+	is_dimension(A),
+	number(B).
 
 is_dimension(D) :-
     atom(D),
