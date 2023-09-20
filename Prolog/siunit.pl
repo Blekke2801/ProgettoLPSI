@@ -393,12 +393,12 @@ compare_units(>, U1, U2) :-
     \+is_base_siu(U2).
 
 qsum(q(N, D), _, _) :-
-    \+is_quantity(q(N1, D1)),
+    \+is_quantity(q(N, D)),
     !,
     false.
 
 qsum(_, q(N, D), _) :-
-    \+is_quantity(q(N1, D1)),
+    \+is_quantity(q(N, D)),
     !,
     false.
 
@@ -421,12 +421,12 @@ qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
     NR is NR1 + NR2.
 
 qsub(q(N, D), _, _) :-
-    \+is_quantity(q(N1, D1)),
+    \+is_quantity(q(N, D)),
     !,
     false.
 
 qsub(_, q(N, D), _) :-
-    \+is_quantity(q(N1, D1)),
+    \+is_quantity(q(N, D)),
     !,
     false.
 
@@ -458,12 +458,12 @@ qsub(q(N1, D1), q(N2, D2), _):-
     false.
 
 qtimes(q(N, D), _, _) :-
-    \+is_quantity(q(N1, D1)),
+    \+is_quantity(q(N, D)),
     !,
     false.
 
 qtimes(_, q(N, D), _) :-
-    \+is_quantity(q(N1, D1)),
+    \+is_quantity(q(N, D)),
     !,
     false.
 
@@ -476,7 +476,7 @@ qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
     NR is N1 * N2.
 
 qexpt(q(N, D), _, _) :-
-    \+is_quantity(q(N1, D1)),
+    \+is_quantity(q(N, D)),
     !,
     false.
 
