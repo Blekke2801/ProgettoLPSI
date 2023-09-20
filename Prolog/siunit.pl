@@ -262,8 +262,9 @@ compare_units(>, U, PU):-
 
 compare_units(<, U, PU):-
     prefix_expansion(PU, U * 10 ** N),
-    !,
-    integer(N).
+    integer(N),
+    N \=0,
+    !.
 
 compare_units(>, PU, U):-
     prefix_expansion(PU, U * 10 ** N),
@@ -273,20 +274,22 @@ compare_units(>, PU, U):-
 
 compare_units(<, PU, U):-
     prefix_expansion(PU, U * 10 ** N),
-    !,
-    integer(N).
+    integer(N),
+    N \=0,
+    !.
 
 compare_units(_, A, _):-
     \+is_siu(A),
     !,
     false.
 
+compare_units(=, U, U):- !.
+
 compare_units(_, _, B):-
     \+is_siu(B),
     !,
     false.
 
-compare_units(=, U, U):- !.
 
 compare_units(>, kg, _):- !.
 compare_units(<, _, kg):- !.
