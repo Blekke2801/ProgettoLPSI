@@ -508,6 +508,28 @@ uexpt(U, N, UR):-
     uexpt(Y, N, UR2),
     UR =.. [*, UR1, UR2].
 
+qtimes(q(N, D), _, _) :-
+    \+is_quantity(q(N, D)),
+    !,
+    false.
+
+qtimes(_, q(N, D), _) :-
+    \+is_quantity(q(N, D)),
+    !,
+    false.
+
+qtimes(_, q(N, D), _) :-
+    N \= 0,
+    !,
+    false.
+
+qdiv(q(N1, D1), q(N2, D1), q(NR, 1)):-
+    NR is N1 / N2.
+
+qdiv(q(N1, D1), q(N2, D2), QR) :-
+    qexpt(q(N2, D2), -1, Q2),
+    qtimes(q(N1, D1), Q2, QR).
+
 unify_units([], []).
 unify_units([X], [X]).
 
