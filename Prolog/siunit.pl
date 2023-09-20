@@ -253,6 +253,27 @@ is_quantity(q(N, D)) :-
     
 %%% Marco Antoniotti venerdì, 1 settembre 2023, 15:05
 
+compare_units(>, U, PU):-
+    prefix_expansion(PU, U*10**N),
+    integer(N),
+    N < 0,
+    !.
+
+compare_units(<, U, PU):-
+    prefix_expansion(PU, U*10**N),
+    !,
+    integer(N).
+
+compare_units(>, PU, U):-
+    prefix_expansion(PU, U*10**N),
+    integer(N),
+    N > 0,
+    !.
+
+compare_units(<, PU, U):-
+    prefix_expansion(PU, U*10**N),
+    !,
+    integer(N).
 
 compare_units(_, _, B):-
     \+is_siu(B),
@@ -586,13 +607,25 @@ norm(Expr, SortedExpr) :-
 % Predicato per convertire un'espressione in una lista di fattori
 extract_elements(A, [A]):-
     atom(A),
-    is_siu(A),
+    is_siu(A).
+
+extract_elements(A, [A]):-
+    atom(A),
+    !,
+    prefix_expansion(A, _),
     !.
 
 extract_elements(A**N, [[A, N]]):-
     number(N),
     atom(A),
     is_siu(A),
+    !.
+
+extract_elements(A**N, [[A, N]]):-
+    number(N),
+    atom(A),
+    !,
+    prefix_expansion(A, _),
     !.
 
 extract_elements(Comp, List):-
