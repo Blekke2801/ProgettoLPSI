@@ -214,6 +214,7 @@ expansion(m,10**(-3)).
 
 
 is_dimension([*, A, B]) :-
+    !,
     is_dimension(A),
     is_dimension(B).
 
@@ -223,6 +224,7 @@ is_dimension([**, A, B]) :-
     number(B).
 
 is_dimension([**, A, B]) :-
+    !,
     prefix_expansion(A, _),
     number(B).
 
@@ -258,13 +260,13 @@ compare_units(_, _, B):-
     false.
 
 /*
-compare_units(>, kg, _):- !.
-compare_units(>, m, _):- !.
-compare_units(>, s, _):- !.
-compare_units(>, 'A', _):- !.
-compare_units(>, 'K', _):- !.
-compare_units(>, cd, _):- !.
-compare_units(>, mol, _):- !.
+    compare_units(>, kg, _):- !.
+    compare_units(>, m, _):- !.
+    compare_units(>, s, _):- !.
+    compare_units(>, 'A', _):- !.
+    compare_units(>, 'K', _):- !.
+    compare_units(>, cd, _):- !.
+    compare_units(>, mol, _):- !.
 */
 
 compare_units(_, A, _):-
