@@ -255,27 +255,15 @@ is_quantity(q(N, D)) :-
 %%% Marco Antoniotti venerdì, 1 settembre 2023, 15:05
 
 compare_units(>, U, PU):-
+    is_base_siu(U),
     prefix_expansion(PU, U * 10 ** N),
     integer(N),
-    N < 0,
-    !.
-
-compare_units(<, U, PU):-
-    prefix_expansion(PU, U * 10 ** N),
-    integer(N),
-    N \=0,
-    !.
-
-compare_units(>, PU, U):-
-    prefix_expansion(PU, U * 10 ** N),
-    integer(N),
-    N > 0,
     !.
 
 compare_units(<, PU, U):-
+    is_base_siu(U),
     prefix_expansion(PU, U * 10 ** N),
     integer(N),
-    N \=0,
     !.
 
 compare_units(_, A, _):-
@@ -355,30 +343,6 @@ compare_units(<, X, mol):-
 
 compare_units(<,'C',dc).
 compare_units(>,dc,'C').
-/*
-compare_units(>, U1, U2) :-
-    is_base_siu(U1),
-    \+is_base_siu(U2),
-    !.
-
-compare_units(<, U1, U2) :-
-    \+is_base_siu(U1),
-    is_base_siu(U2),
-    !.
-
-compare_units(>, U1, U2) :-
-    is_base_siu(U1),
-    is_base_siu(U2),
-    siu_name(U1, N1),
-    siu_name(U2, N2),
-    N1 @< N2,
-    !.
-
-compare_units(<, U1, U2) :-
-    is_base_siu(U1),
-    is_base_siu(U2),
-    !.
-*/
 
 compare_units(<, U1, U2) :-
 \+is_base_siu(U1),
@@ -403,14 +367,16 @@ qsum(_, q(N, D), _) :-
     false.
 
 qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
+    !,
     norm(D1, DR),
     NR is N1 + N2.
 
 qsum(q(N1, D1), q(N2, D2), q(NR, DC)) :-
-    norm(D2, D2C),
-    norm(D1, D1C),
-    expand_all(D2C, DC),
-    expand_all(D1C, DC),
+    expand_all(D2, D2C),
+    expand_all(D1, D1C),
+    norm(D2, DC),
+    norm(D1, DC),
+    !,
     NR is N1 + N2.
 
 qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
@@ -419,6 +385,16 @@ qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
     NR1 is N1*(10 ** E1),
     NR2 is N2*(10 ** E2),
     NR is NR1 + NR2.
+
+qsub(q(N, D), _, _) :-
+    \+is_quantity(q(N, D)),
+    !,
+    false.
+
+qsub(_, q(N, D), _) :-
+    \+is_quantity(q(N, D)),
+    !,
+    false.
 
 qsub(q(N1, D1), q(N2, D2), q(NR, DP)):-
     prefix_expansion(D1,DP * 10  ** E1),
@@ -438,15 +414,19 @@ qsub(q(N1, D1), q(N2, D2), _):-
     !,
     false.
 
-qsub(q(N, D), _, _) :-
-    \+is_quantity(q(N, D)),
+qsub(q(N1, _), q(N2, _), _):-
+    N1 < N2,
+    write('Non puo\' andare sotto zero, viva il 42'),
     !,
     false.
 
-qsub(_, q(N, D), _) :-
-    \+is_quantity(q(N, D)),
+qsub(q(N1, D1), q(N2, D2), q(NR, DC)) :-
+    expand_all(D2, D2C),
+    expand_all(D1, D1C),
+    norm(D2, DC),
+    norm(D1, DC),
     !,
-    false.
+    NR is N1 - N2.
 
 qsub(q(N1, D1), q(N2, D1), q(NR, DR)) :-
     norm(D1, DR),
@@ -598,7 +578,9 @@ my_merge(A, [], A).
 my_merge([], B, B).
 
 my_merge([A], [N], [A, N]):-
-    number(N).
+    \+is_list(A),
+    number(N),
+    !.
 
 my_merge([A | Ra], [[B, N] | Rb], [A | M]) :-
     number(N),
