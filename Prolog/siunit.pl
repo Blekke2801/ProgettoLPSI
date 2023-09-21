@@ -374,14 +374,14 @@ qsum(q(N1, D1), q(N2, D1), q(NR, DR)) :-
 qsum(q(N1, D1), q(N2, D2), q(NR, DC)) :-
     expand_all(D2, D2C),
     expand_all(D1, D1C),
-    norm(D2, DC),
-    norm(D1, DC),
+    norm(D2C, DC),
+    norm(D1C, DC),
     !,
     NR is N1 + N2.
 
 qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
-    prefix_expansion(D1,DP * 10  ** E1),
-    prefix_expansion(D2,DP * 10  ** E2),
+    prefix_expansion(D1, DP * 10  ** E1),
+    prefix_expansion(D2, DP * 10  ** E2),
     NR1 is N1*(10 ** E1),
     NR2 is N2*(10 ** E2),
     NR is NR1 + NR2.
@@ -397,16 +397,16 @@ qsub(_, q(N, D), _) :-
     false.
 
 qsub(q(N1, D1), q(N2, D2), q(NR, DP)):-
-    prefix_expansion(D1,DP * 10  ** E1),
-    prefix_expansion(D2,DP * 10  ** E2),
+    prefix_expansion(D1, DP * 10  ** E1),
+    prefix_expansion(D2, DP * 10  ** E2),
     NR1 is N1 * (10 ** E1),
     NR2 is N2 * (10 ** E2),
     NR1 > NR2,
     NR is NR1 - NR2.
 
 qsub(q(N1, D1), q(N2, D2), _):-
-    prefix_expansion(D1,DP * 10  ** E1),
-    prefix_expansion(D2,DP * 10  ** E2),
+    prefix_expansion(D1, DP * 10  ** E1),
+    prefix_expansion(D2, DP * 10  ** E2),
     NR1 is N1 * (10 ** E1),
     NR2 is N2 * (10 ** E2),
     NR1 < NR2,
@@ -423,8 +423,8 @@ qsub(q(N1, _), q(N2, _), _):-
 qsub(q(N1, D1), q(N2, D2), q(NR, DC)) :-
     expand_all(D2, D2C),
     expand_all(D1, D1C),
-    norm(D2, DC),
-    norm(D1, DC),
+    norm(D2C, DC),
+    norm(D1C, DC),
     !,
     NR is N1 - N2.
 
@@ -453,9 +453,18 @@ qtimes(q(N1, D1), q(N2, D1), q(NR, DR)) :-
     NR is N1 * N2.
 
 qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
-    norm(D1 * D2, DR),
+    extract_elements(D2, D2C),
+    mul_dim(D1, D2C, DR),
     NR is N1 * N2.
 
+mul_dim(D, [], D).
+
+mul_dim(D1, [D2 | DRest], R) :- 
+    list_to_expression(D2, D2E),
+    norm(D1 * D2E, D1M),
+    mul_dim(D1M, DRest, R).
+
+    
 qexpt(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
     !,
