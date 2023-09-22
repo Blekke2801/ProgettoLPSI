@@ -747,7 +747,14 @@ extract_elements(Comp, List):-
     append(L1, L2, List).
 
 % Predicato per convertire una lista di fattori in un'espressione
-list_to_expression([Factor], Factor):- !.
+list_to_expression([Factor], Factor):- 
+    \+is_list(Factor),
+    !.
+
+list_to_expression([Factor], Factors):- 
+    list_to_expression(Factor, Factors),
+    !.
+
 list_to_expression([A, N], (A ** N)):-
     number(N),
     !.

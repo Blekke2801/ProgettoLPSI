@@ -83,6 +83,8 @@ test_qsum_prefixes :-
 
 test_qsum_false_2 :- 
     not(qsum(q(42,ms), q(42,kg) , _)).
+test_norm_single :- 
+    norm(m*m, m**2).
 
 test_qsum_ms :-
     qsum(q(42,ms), q(42,ms), q(84, ms)).
@@ -117,6 +119,7 @@ test_all :-
     test_once(test_symbol_metre),
     test_once(test_name_m),
     test_once(test_name_Bq),
+    test_once(test_norm_single),
     test_once(test_compare_mm),
     test_once(test_compare_aa),
     test_once(test_compare_mkg),
