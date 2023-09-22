@@ -22,13 +22,40 @@
   (list
 
    ;; Unit� di base
-   (make-si-unit :name 'metre :symbol 'm :base t :expansion '(* m))
-   (make-si-unit :name 'kilogram :symbol 'kg :base t :expansion '(* kg))
-   (make-si-unit :name 'second :symbol 's :base t :expansion '(* s))
-   (make-si-unit :name 'ampere :symbol 'A :base t :expansion '(* A))
-   (make-si-unit :name 'kelvin :symbol 'K :base t :expansion '(* K))
-   (make-si-unit :name 'mole :symbol 'mol :base t :expansion '(* mol))
-   (make-si-unit :name 'candela :symbol 'cd :base t :expansion '(* cd))
+   (make-si-unit :name 'meter
+                 :symbol 'm
+                 :base t
+                 :expansion '(* m))
+
+   (make-si-unit :name 'kilogram
+                 :symbol 'kg
+                 :base t
+                 :expansion '(* kg))
+
+   (make-si-unit :name 'second
+                 :symbol 's
+                 :base t
+                 :expansion '(* s))
+
+   (make-si-unit :name 'ampere
+                 :symbol 'A
+                 :base t
+                 :expansion '(* A))
+
+   (make-si-unit :name 'kelvin
+                 :symbol 'K
+                 :base t
+                 :expansion '(* K))
+
+   (make-si-unit :name 'mole
+                 :symbol 'mol
+                 :base t
+                 :expansion '(* mol))
+
+   (make-si-unit :name 'candela
+                 :symbol 'cd
+                 :base t
+                 :expansion '(* cd))
 
    ;; Unit� derivate
    (make-si-unit :name 'becquerel 
