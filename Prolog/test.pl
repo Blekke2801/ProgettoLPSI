@@ -1,5 +1,15 @@
 :-[siunit].
-
+test_assurdamente_lungo(X) :-
+    norm((m** -2) * 'A' *
+     (s** -2) * kg * 
+     (m ** 2) * 
+     ('K' ** 2 ) * 
+     (s ** -1 ) * 'Wb' * 
+     ('W' ** 2) * ('W' ** -2) * 'T' * 'Sv' * 
+     (rad ** 2) * 'Pa' * 'N' * 
+     ('Omega' ** 2) * (lx * lm * kat * 'J') * 
+     ('H' ** 2) * 'Hz' * ('Gy' **4) * 'F' * 'C' * dc, X).
+    
 test_dimensione_m :- 
     is_dimension(m).
 
@@ -83,6 +93,7 @@ test_qsum_prefixes :-
 
 test_qsum_false_2 :- 
     not(qsum(q(42,ms), q(42,kg) , _)).
+
 test_norm_single :- 
     norm(m*m, m**2).
 
