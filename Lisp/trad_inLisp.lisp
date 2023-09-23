@@ -234,20 +234,20 @@
               (not (listp b)))
           (append (scambiatore a b) (my-merge (cdr lst1) (cdr lst2))))
         ((and (is-potenza b)
-              (not (listp a))
-          (append (scambiatore b a) (my-merge (cdr lst1) (cdr lst2)))))
+              (not (listp a)))
+          (append (scambiatore b a) (my-merge (cdr lst1) (cdr lst2))))
         ((and (is-potenza a)
               (is-potenza b))
           (append (scambiatore a b) (my-merge (cdr lst1) (cdr lst2))))
         ((or (listp a) 
              (listp b))
-          (list a (my-merge lst1 (cdr lst2))))
+          (list a b (my-merge (cdr lst1) (cdr lst2))))
         (t
           (cond
             ((eql (compare-units a b) '<)
-            (list b (my-merge (cdr lst1) lst2)))
+            (list b (my-merge lst1 (cdr lst2))))
             ((eql (compare-units a b) '>)
-              (list a (my-merge lst1 (cdr lst2)))))
+              (list a (my-merge (cdr lst1) lst2))))
             (t
               (list '(** a 2) (my-merge (cdr lst1) (cdr lst2))))))))))
 
