@@ -245,11 +245,11 @@
         (t
           (cond
             ((eql (compare-units a b) '<)
-            (list b (my-merge lst1 (cdr lst2))))
+              (list b (my-merge lst1 (cdr lst2))))
             ((eql (compare-units a b) '>)
-              (list a (my-merge (cdr lst1) lst2))))
+              (list a (my-merge (cdr lst1) lst2)))
             (t
-              (list '(** a 2) (my-merge (cdr lst1) (cdr lst2))))))))))
+              (list '(** a 2) (my-merge (cdr lst1) (cdr lst2)))))))))))
 
 (defun is-potenza (a)
   (and (listp a)
