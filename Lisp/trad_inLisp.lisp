@@ -130,35 +130,51 @@
 (defun is-dimension (dim)
   (cond 
    ;; Caso: [* A B]
-   ((and (listp dim) (eq (first dim) '*) (is-dimension (second dim)) (is-dimension (third dim)))
+   ((and (listp dim) 
+         (eq (first dim) '*) 
+         (is-dimension (second dim)) 
+         (is-dimension (third dim)))
     t)
    
    ;; Caso: [** A B] con A come unità SI e B come numero
-   ((and (listp dim) (eq (first dim) '**) (is-siu (second dim)) (numberp (third dim)))
+   ((and (listp dim) 
+         (eq (first dim) '**) 
+         (is-siu (second dim)) 
+         (numberp (third dim)))
     t)
    
    ;; Caso: [** A B] con A come prefisso SI e B come numero
-   ((and (listp dim) (eq (first dim) '**) (expansion (second dim)) (numberp (third dim)))
+   ((and (listp dim) 
+         (eq (first dim) '**) 
+         (expansion (second dim))
+         (numberp (third dim)))
     t)
 
    ;; Caso: [** A B] con A come dimensione e B come numero
-   ((and (listp dim) (eq (first dim) '**) (is-dimension (second dim)) (numberp (third dim)))
+   ((and (listp dim) 
+         (eq (first dim) '**)
+         (is-dimension (second dim))
+         (numberp (third dim)))
     t)
 
    ;; Caso: D come atom e unità SI
-   ((and (atom dim) (is-siu dim))
+   ((and (atom dim) 
+         (is-siu dim))
     t)
    
    ;; Caso: X come atom e prefisso SI
-   ((and (atom dim) (expansion dim))
+   ((and (atom dim) 
+         (expansion dim))
     t)
    
    ;; Caso: atom come combinazione di prefisso e unità
-   ((and (atom dim) (prefix-and-unit dim))
+   ((and (atom dim) 
+         (prefix-and-unit dim))
     t)
 
    ;; Caso: D come compound
-   ((and (listpp dim) (is-dimension (apply 'list dim)))
+   ((and (listp dim) 
+         (is-dimension (list dim)))
     t)
    
    ;; Caso di default
@@ -172,6 +188,12 @@
 ;;Marco Antoniotti venerdì, 1 settembre 2023, 15:05
 (defun compare-units (u1 u2)
     (cond 
+        ((and (is-potenza u1) (not (is-potenza u2)))
+          (compare-units (cadr u1) u2))
+        ((and (is-potenza u2) (not (is-potenza u1)))
+          (compare-units u1 (cadr u2)))
+        ((and (is-potenza u1) (is-potenza u2))
+          (compare-units (cadr u1) (cadr u2)))
         ((and (or (null u1) (null u2)) 
               (not (or (or (is-siu u1) (not (null (expansion u1))))
                        (or (is-siu u2) (not (null (expansion u1)))))))
@@ -201,55 +223,71 @@
           ((or (is-siu dim) (not (null (expansion dim))))
             dim)
           (t 
-            (list '* (merge-sort (cdr dim)))))
+            (append '(*) (merge-sort (cdr dim) 'compare-units))))
     (error "non e\' una dimensione")))
 
-(defun merge-sort (list)
-  (if (small list) list
-	  (my-merge
-		(merge-sort (left-half list))
-		(merge-sort (right-half list)))))
+(defun merge-sort (lst comparator)
+  (if (<= (length lst) 1)
+      lst
+      (let* ((mid (floor (/ (length lst) 2)))
+             (left (subseq lst 0 mid))
+             (right (subseq lst mid)))
+        (my-merge (merge-sort left comparator)
+               (merge-sort right comparator)
+               comparator))))
 
-(defun right-half (list)
-  (last list (ceiling (/ (length list) 2))))
-
-(defun left-half (list)
-  (ldiff list (right-half list)))
-
-(defun small (list)
-  (or (null list) (atom list) (is-potenza list)))
-
-(defun divide (lst)
-  (let ((middle (floor (/ (length lst) 2))))
-    (values (subseq lst 0 middle) (subseq lst middle))))
-
-(defun my-merge (lst1 lst2)
+(defun my-merge (left right comparator)
   (cond
-   ((null (car lst1)) lst2)
-   ((null (car lst2)) lst1)
-   (t 
-    (let ((a (car lst1))
-          (b (car lst2)))
-      (cond ((and (is-potenza a)
-              (not (listp b)))
-          (append (scambiatore a b) (my-merge (cdr lst1) (cdr lst2))))
-        ((and (is-potenza b)
-              (not (listp a)))
-          (append (scambiatore b a) (my-merge (cdr lst1) (cdr lst2))))
-        ((and (is-potenza a)
-              (is-potenza b))
-          (append (scambiatore a b) (my-merge (cdr lst1) (cdr lst2))))
-        ((or (listp a) 
-             (listp b))
-          (list a b (my-merge (cdr lst1) (cdr lst2))))
-        (t
-          (cond
-            ((eql (compare-units a b) '<)
-              (list b (my-merge lst1 (cdr lst2))))
-            ((eql (compare-units a b) '>)
-              (list a (my-merge (cdr lst1) lst2)))
-            (t
-              (list '(** a 2) (my-merge (cdr lst1) (cdr lst2)))))))))))
+    ((null left) right)
+    ((null right) left)
+    (t (case (funcall comparator (car left) (car right))
+         ('> (append (list (car left)) 
+                     (my-merge (cdr left) right comparator)))
+         ('< (append (list (car right)) 
+                     (my-merge left (cdr right) comparator)))
+         ('= (let* ((r (unify-powers (car left) (car right)))
+              (e (caddr r)))
+              (if (zerop e)
+                  (my-merge (cdr left) (cdr right) comparator)
+                  (append (list r) 
+                          (my-merge (cdr left) (cdr right) comparator)))))     
+         (otherwise (append (list (car left) (car right)) 
+                    (my-merge (cdr left) (cdr right) comparator)))))))
+
+(defun unify-powers (u1 u2)
+  (case ((is-potenza u1) (is-potenza u2))
+    ((T T) (list '** (cadr u1) (+ (caddr u1) (caddr u2))))
+    ((T nil) (list '** (cadr u1) (1+ (caddr u1))))
+    ((nil T) (list '** (cadr u1) (1+ (caddr u2))))
+    ((nil nil) '(** u1 2))))
+
+; (defun my-merge (lst1 lst2)
+;   (cond
+;    ((null (car lst1)) lst2)
+;    ((null (car lst2)) lst1)
+;    (t 
+;     (let ((a (car lst1))
+;           (b (car lst2)))
+;       (cond ((and (is-potenza a)
+;               (not (listp b)))
+;           (append (scambiatore a b) (my-merge (cdr lst1) (cdr lst2))))
+;         ((and (is-potenza b)
+;               (not (listp a)))
+;           (append (scambiatore b a) (my-merge (cdr lst1) (cdr lst2))))
+;         ((and (is-potenza a)
+;               (is-potenza b))
+;           (append (scambiatore a b) (my-merge (cdr lst1) (cdr lst2))))
+;         ((or (listp a) 
+;              (listp b))
+;           (list a b (my-merge (cdr lst1) (cdr lst2))))
+;         (t
+;           (cond
+;             ((eql (compare-units a b) '<)
+;               (list b (my-merge lst1 (cdr lst2))))
+;             ((eql (compare-units a b) '>)
+;               (list a (my-merge (cdr lst1) lst2)))
+;             (t
+;               (list '(** a 2) (my-merge (cdr lst1) (cdr lst2)))))))))))
 
 (defun is-potenza (a)
   (and (listp a)
