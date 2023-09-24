@@ -307,7 +307,7 @@
 (defun q (n d)
   (if (and (numberp n) (is-dimension d))
    (list 'Q (float n) (norm d))
-   (error "Le quantità non sono compatibili in termini di dimensioni.")))
+   (error "Non può essere trasformato in quantità")))
 
 
 
@@ -328,19 +328,34 @@
 
 
 (defun qtimes (q1 q2)
-  (if (and (is-quantity q1) (is-quantity q2))
+    (cond 
+      ((minusp (* (second q1) (second q2))) (format t "~%Non valgono unità sotto lo zero")))
       (let ((value1 (second q1))
             (dim1 (third q1))
             (value2 (second q2))
             (dim2 (third q2)))
         (q 
               (* value1 value2)
+              (norm (append '(*) (append (list dim1) (list dim2)))))))
+
+(defun qdiv (q1 q2)
+    (cond
+        ((zerop (second q2)) (error "Non puoi dividere per 0"))
+        ((minusp (/ (second q1) (second q2))) (format t "~%Non valgono unità sotto lo zero")))
+  (if (and (is-quantity q1) (is-quantity q2))
+      (let ((value1 (second q1))
+            (dim1 (third q1))
+            (value2 (second q2))
+            (dim2 (third q2)))
+        (q 
+              (float(/ value1 value2))
               (norm (list '* dim1 dim2))))
     (error "Non sono quantità valide")))
 
 
-
 (defun qexpt (quantity exponent)
+     (cond
+        ((minusp(expt (second quantity) exponent)) (format t "~%Non valgono unità sotto lo zero")))
   (if (is-quantity quantity)
       (let* ((value (second quantity))
              (dimension (third quantity))
@@ -365,15 +380,33 @@
    ;; Caso: [** A B]
    ((and (listp dim) 
          (eq (first dim) '**)) 
-    (let ((base (second dim))
-          (prev-exp (third dim)))
-      (list '** base (* prev-exp exponent))))
+    (let ((a (second dim))
+          (b (third dim)))
+      (list '** a (* b exponent))))
 
    ;; Caso di default
    (t dim)))
 
-(print(q 20 'm))
-(print(qsum (q -20 'm) (q 10 'm)))
-(print(qsub (q -20 'm) (q 10 'm)))
-(print(qtimes(q 20 'm)(q 10 '(* s m))))
-(print(qexpt(q 20 'm) 2))
+;;    (print(q 20 'm))
+;;    (terpri)
+;;    (print(qsum (q -20 'm) (q 10 'm)))
+;;    (terpri)
+;;    (print(qsub (q -20 'm) (q 10 'm)))
+;;    (terpri)
+;;    (print(qtimes(q 20 'm)(q 10 '(* s m))))
+;;    (terpri)
+    (print(qtimes(q -20 'm)(q 10 '(* s m))))
+;;    (terpri)
+    (print(qtimes(q 20 'm)(q 10 '(** m -1)))) ;;TEST ROTTO
+    ;;(print(qdiv(q 20 'm)(q 10 'm))) ;;TEST ROTTO
+;;    (terpri)
+;;    (print(qexpt(q 20 'm) 2))
+;;    (terpri)
+;;    (print(qdiv(q 20 'm) (q 10 's)))
+;;    (terpri)
+;;    (print(qdiv(q -20 'm) (q 10 's)))
+;;    (terpri)
+;;    (print(qexpt(q 20 'm) -1))
+;;    (terpri)
+;;    (print(qexpt(q -2 'm) 3))
+;;    (terpri)
