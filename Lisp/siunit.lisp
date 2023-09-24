@@ -1,3 +1,10 @@
+;;;; -*- Mode: Lisp -*-
+;;;; 886259 Comi Emanuele
+;;;; 869222 Melpignano Umberto
+;;;; 869218 Mocellin Andrea
+
+; Ritorna T quando Q è una “quantità”
+; In caso contrario ritorna NIL
 (defun is-quantity (q)
     (and (listp q)
          (eq 'q (first q))
@@ -6,17 +13,23 @@
               (and (numberp n)
                    (is-dimension d)))))
 
-
+; Ritorna T quando S è un simbolo che denota un’unità S.I. base.
+; La funzione ritorna NIL in caso contrario
 (defun is-base-siu (unit)
     (not (null (member unit '(kg m s A K cd mol)))))
        
-
+; Ritorna T quando S è un simbolo che denota un’unità S.I.
+; (base o derivata).
+; La funzione ritorna NIL in caso contrario
 (defun is-siu (unit)
   (or (not (null (member unit '(
              Bq dc C F g Gy Hz H J kat lm lx N Omega Pa 
              rad S Sv sr T V W Wb))))
       (is-base-siu unit)))
 
+; Ritorna il nome N (un simbolo Common Lisp) dell’unità
+; il cui simbolo è S
+; Ritorna NIL se non si trova l’associazione
 (defun siu-name (unit)
   (cond ((eq unit 'kg) 'kilogram)
         ((eq unit 'm) 'metre)
@@ -49,7 +62,9 @@
         ((eq unit 'Wb) 'Weber)
         (t nil))) ; Restituisci nil se non è un'unità conosciuta
 
-
+; Ritorna il simbolo S (un simbolo Common Lisp) dell’unità
+; il cui nome è N
+; Ritorna NIL se non si trova l’associazione
 (defun siu-symbol (name)
   (cond ((eq name 'kilogram) 'kg)
         ((eq name 'metre) 'm)
@@ -82,6 +97,8 @@
         ((eq name 'Weber) 'Wb)
         (t nil))) ; Restituisci nil se non è un nome conosciuto
 
+; Ritorna l’espansione in forma canonica dell’unità S
+; L’espansione deve contenere solo unità base.
 (defun siu-base-expansion (symbol)
   (cond ((eq symbol 'Bq)   '(** s -1))
         ((eq symbol 'dc)   'K)
@@ -108,6 +125,8 @@
         ((is-base-siu symbol) symbol)
         (t nil))) ; default case
 
+; Espande e trasforma unità complesse in un formato
+; più standardizzato o base
 (defun expand-all (unit)
   (cond ((is-siu unit) 
           (siu-base-expansion unit))
@@ -119,6 +138,8 @@
             (expand-all (cadr unit))))
         (t nil)))
 
+; Verifica se un dato elemento rappresenta una dimensione elevata
+; a una potenza
 (defun is-potenza (a)
   (if (and (listp a)
            (equal (car a) '**)
@@ -127,6 +148,8 @@
         (or (is-siu (cadr a)) (not (null (exp-prefix (cadr a)))))
         (is-dimension (cadr a)))))
 
+; Ritorna T quando D è una “dimensione”
+; In caso contrario ritorna NIL
 (defun is-dimension (unit)
   (cond ((null unit) t)
         ((atom unit)
@@ -140,6 +163,8 @@
             (is-dimension (caddr unit)))))
         (t nil)))
 
+; Ritorna il valore del prefisso passato
+; Altrimenti restituisce NIL
 (defun expansion (prefix)
   (cond ((eq prefix 'k)  (expt 10 3))
         ((eq prefix 'h)  (expt 10 2))
@@ -149,6 +174,8 @@
         ((eq prefix 'm)  (float (expt 10 -3)))
         (t nil))) ; default case, ritorna nil se il prefisso non è riconosciuto
 
+; Riconosce se unit ha prefisso o no, e in caso positivo
+; riconosce e divide il prefisso dall'unità, resituendone il valore
 (defun exp-prefix (unit)
   (if (is-siu unit) 
     (list 1 unit)
@@ -171,6 +198,8 @@
               (t nil)))
         nil)))
 
+; Ritorna come Result uno dei simboli <, >, o =
+; Result rappresenta la relazione d’ordine tra le unità U1 e U2
 (defun compare-units (u1 u2)
     (cond 
         ((and (is-potenza u1) (not (is-potenza u2)))
@@ -205,6 +234,7 @@
         ((string> u1 u2) '<)
         (t '>)))
 
+; Ritorna la forma canonica della dimensione D
 (defun norm (dim)
   (if (is-dimension dim)
     (cond ((is-potenza dim)
@@ -220,6 +250,7 @@
                   (car sussy))))))
     (error "non e\' una dimensione")))
 
+; Esegue l'algoritmo base di Merge Sort
 (defun merge-sort (lst comparator)
   (if (and (<= (length lst) 1) (not (listp (car lst))))
       lst
@@ -232,6 +263,8 @@
                 (merge-sort right comparator)
                 comparator)))))
 
+; Fonde due liste ordinate e gestisce il caso in cui due
+; elementi sono uguali, unificandoli in un unico elemento
 (defun my-merge (left right comparator)
   (cond
     ((null left) right)
@@ -250,6 +283,8 @@
          (otherwise (append (list (car left) (car right)) 
                     (my-merge (cdr left) (cdr right) comparator)))))))
 
+; Unifica due unità di potenza in una singola unità, in base
+; alle regole definite da "valuta"
 (defun unify-powers (u1 u2)
   (case (valuta u1 u2)
     ('1 (list '** (cadr u1) (+ (caddr u1) (caddr u2))))
@@ -257,12 +292,16 @@
     ('3 (list '** u1 (1+ (caddr u2))))
     ('4 (list '** u1 2))))
 
+; Determina le relazioni tra due unità rispetto al fatto che
+; siano o meno rappresentate come potenze
 (defun valuta (u1 u2)
   (cond ((and (is-potenza u1) (is-potenza u2)) '1)
         ((and (is-potenza u1) (not (is-potenza u2))) '2)
         ((and (not (is-potenza u1)) (is-potenza u2)) '3)
         ((and (not (is-potenza u1)) (not (is-potenza u2))) '4)))
 
+; Ordina e combina due input sotto forma di lista o meno
+; In caso di liste, confronta i secondi elementi di ciascuna
 (defun scambiatore (lista nonlista)
   (if (and (listp lista)
            (listp nonlista))
@@ -285,6 +324,9 @@
             (t
               (list '** a (+ (third lista) 1)))))))
 
+; Rappresentazione delle quantità
+; n indica il valore
+; d indica la dimensione
 (defun q (n d)
 (if (numberp n)
   (cond ((null d) (list 'Q n 1))
@@ -294,6 +336,10 @@
           (error "Non è una dimensione valida")))
   (error "Non può essere trasformato in quantità")))
 
+; Ritorna il risultato (in forma canonica) della somma
+; delle quantità Q1 e Q2. La somma è valida solo se
+; le due quantità hanno dimesioni compatibili; in caso contrario
+; la funzione genera un errore (chiamando la funzione error).
 (defun qsum (q1 q2)
   (if (and (is-quantity q1) (is-quantity q2))
     (let ((n1 (second q1))
@@ -317,6 +363,10 @@
           (error "Le quantità non sono compatibili."))))
       (error "Non sono quantità valide")))
 
+; Ritorna il risultato (in forma canonica) della sottrazione
+; delle quantità Q1 e Q2. La sottrazione è valida solo se
+; le due quantità hanno dimesioni compatibili; in caso contrario
+; la funzione genera un errore (chiamando la funzione error).
 (defun qsub (q1 q2)
   (if (and (is-quantity q1) (is-quantity q2))
     (let ((n1 (second q1))
@@ -340,6 +390,8 @@
           (error "Le quantità non sono compatibili."))))
       (error "Non sono quantità valide")))
 
+; Ritorna il risultato (in forma canonica) della moltiplicazione
+; delle quantità Q1 e Q2.
 (defun qtimes (q1 q2)
   (if (and (is-quantity q1) (is-quantity q2))
     (if (minusp (* (second q1) (second q2))) 
@@ -357,6 +409,10 @@
                 (norm (append '(*) (append (list dim1) (list dim2))))))))
     (error "Non sono quantità valide")))
 
+; Ritorna il risultato (in forma canonica) della divisione
+; delle quantità Q1 e Q2.
+; Se Q2 ha valore 0, viene segnalato
+; un errore mediante la funzione error
 (defun qdiv (q1 q2)
   (if (and (is-quantity q1) (is-quantity q2))
     (cond
@@ -367,7 +423,8 @@
         (t (qtimes q1 (qexpt q2 -1))))
     (error "Non sono quantità valide")))
 
-
+; Ritorna il risultato (in forma canonica) dell’elevamento
+; alla potenza N delle quantità Q
 (defun qexpt (quantity exponent)
   (if (and (is-quantity quantity) (numberp exponent))
     (let* ((value (second quantity))
@@ -379,6 +436,8 @@
         (q new-value new-dimension)))
     (error "q non valido o esponente non valido")))
 
+; Consente di elevare a potenza dimensioni atomiche o il prodotto
+; di due dimensioni
 (defun expt-dimension (dim exponent)
   (cond 
    ;; Caso base: dimensione atomica
