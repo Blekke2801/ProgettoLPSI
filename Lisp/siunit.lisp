@@ -109,8 +109,10 @@
         (t nil))) ; default case
 
 (defun expand-all (unit)
-  (cond ((is-siu unit) (siu-base-expansion unit))
-        ((is-potenza unit) (expt-dimension (expand-all (cadr unit)) (caddr unit)))
+  (cond ((is-siu unit) 
+          (siu-base-expansion unit))
+        ((is-potenza unit) 
+          (expt-dimension (expand-all (cadr unit)) (caddr unit)))
         ((and (listp unit) (eql '* (car unit)))
           (if (> (length (cdr unit)) 1)
             (append '(*) (mapcar 'expand-all (cdr unit)))
