@@ -304,3 +304,27 @@
             (t
               (list '** a (+ (third lista) 1)))))))
 
+(defun compatibility (q1 q2)
+      (if (equal (norm (third q1)) (norm (third q2)))
+          t
+          (error "Le quantità non sono compatibili in termini di dimensioni.")))
+
+(defun q (n d)
+  (if (and (numberp n) (is-dimension d))
+   (list Q (float n) (norm d)))
+    (error "non hai inserito una quantità/dimensione valida"))
+
+(defun qsum (q1 q2)
+  if((compatibility q1 q2)
+   q((+ (second q1) (second q2)) (third q1)) 
+   error "Le quantità non sono compatibili in termini di dimensioni."))
+  
+(defun qsub (q1 q2)
+  if((compatibility q1 q2)
+   q((- (second q1) (second q2)) (third q1))    
+   error "Le quantità non sono compatibili in termini di dimensioni."))
+
+(defun qtimes (q1 q2)
+(q (* (quantity-value q1) (quantity-value q2)) 
+       (norm (append (third q1) (third q2)))))
+	
