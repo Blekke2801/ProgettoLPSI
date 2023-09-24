@@ -1,3 +1,11 @@
+%%%% -*- Mode: Prolog -*-
+%%%% Emanuele Comi 886259
+%%%% Umberto Melpignano 869222
+%%%% Andrea Mocellin 869218
+
+% Espande dimensioni e unità di misura
+% in termini delle loro dimensioni base
+
 expand_all(D, D) :-
     is_base_siu(D),
     !.
@@ -9,6 +17,8 @@ expand_all(D, DR)  :-
 expand_all(D, DR) :-
     prefix_expansion(D, DR),
     !.
+
+% Espande l'elevamento a potenza
 
 expand_all(A**N, DR):-
     siu_base_expansion(A, DRM),
@@ -53,6 +63,9 @@ expand_all(D, DR) :-
     D =.. [*, A, B],
     expand_all([*, A, B], DR).
 
+% Vero quando S è un simbolo che denota
+% un’unità SI base
+
 is_base_siu(kg).
 is_base_siu(m).
 is_base_siu(s).
@@ -61,6 +74,9 @@ is_base_siu('K').
 is_base_siu(cd).
 is_base_siu(mol).
 
+
+% Vero quando S è un simbolo che denota
+% un’unità SI (base o derivata).
 
 is_siu('Bq').
 is_siu(dc).
@@ -91,6 +107,8 @@ is_siu(X) :-
     is_base_siu(X),
     !.
 
+% Vero quando N è il nome
+% dell’unità il cui simbolo è S
 
 siu_name(kg, kilogram).
 siu_name(m, metre).
@@ -122,11 +140,19 @@ siu_name('V', 'Volt').
 siu_name('W', 'Watt').
 siu_name('Wb', 'Weber').
 
+% Esegue l'inverso di siu_name
+% Vero quando N è il nome dell'unità
+
+% il cui simbolo è S
 siu_symbol(N, S) :-
     siu_name(S, N).
 
+% Vero quando Expansion è l’espansione in forma
+% canonica dell’unità S
+% L’espansione deve contenere solo unità base
+
 siu_base_expansion('Bq', (s ** -1)).
-siu_base_expansion(dc, 'K').
+siu_base_expansion(dc, 'K' - 273).
 siu_base_expansion('C', s * 'A').
 siu_base_expansion('F', (kg  ** -1) * (m  ** -2) * (s ** 4) * ('A' ** 2)).
 siu_base_expansion('Gy', (m ** 2) * (s  ** -2)).
@@ -152,6 +178,9 @@ siu_base_expansion(S, S) :-
     is_base_siu(S),
     !.
 
+% Scompone l'unità di misura derivata
+% nella sua forma di base
+
 prefix_expansion(Final, _) :-
     \+atom(Final),
     !,
@@ -162,6 +191,8 @@ prefix_expansion(kg, g * 10 ** 3):-!.
 prefix_expansion(Var, Var * 10 ** 0):-
     is_siu(Var).
 
+% Conversione del prefisso "deca"
+
 prefix_expansion(Final, Exp) :-
     atom_length(Final, L),
     L > 2,
@@ -169,11 +200,14 @@ prefix_expansion(Final, Exp) :-
     is_siu(Unit),
     Exp =.. [*, Unit, 10 ** 1],!.
 
+
 prefix_expansion(Final, _) :-
     atom_length(Final, L),
     L =< 1,
     !,
     false.
+
+% Conversione dei prefissi "k,h,d,c,m"
 
 prefix_expansion(Final, Exp) :-
     atom_concat(k, Unit, Final),
@@ -201,6 +235,9 @@ prefix_expansion(Final, Exp) :-
     is_siu(Unit),
     Exp =.. [*, Unit, 10 ** (-3)],!.
 
+% Valori dei prefissi delle
+% unità derivate
+
 expansion(k, 10 ** 3).
 expansion(h, 10 ** 2).
 expansion(da, 10).
@@ -208,6 +245,7 @@ expansion(d, 10 ** (-1)).
 expansion(c, 10 ** (-2)).
 expansion(m, 10 ** (-3)).
 
+% Vero quando D è una “dimensione”
 
 is_dimension([*, A, B]) :-
     !,
@@ -244,15 +282,16 @@ is_dimension(D) :-
     D =.. List,
     is_dimension(List).
 
+% Vero quando Q è una “quantità”.
+
 is_quantity(q(N, D)) :-
     number(N),
     is_dimension(D).
 
-%%% Dovete comparare solo se le unità sono composte da unità base. Le unità si confrontano secondo l'ordine lessicografico, non quello della tabella.
-
-%%% A presto
-
-%%% Marco Antoniotti venerdì, 1 settembre 2023, 15:05
+% Vero quando Result è uno dei simboli
+% <, >, o =
+% Result rappresenta la relazione d’ordine
+% tra le unità U1 e U2
 
 compare_units(>, U, PU):-
     is_base_siu(U),
@@ -356,6 +395,11 @@ compare_units(>, U1, U2) :-
     \+is_base_siu(U1),
     \+is_base_siu(U2).
 
+% Vero quando QR è il risultato (in forma canonica)
+% della somma delle quantità Q1 e Q2
+% La somma è valida solo se le due quantità
+% hanno dimesioni compatibili
+
 qsum(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
     !,
@@ -385,6 +429,11 @@ qsum(q(N1, D1), q(N2, D2), q(NR, DP)):-
     NR1 is N1*(10 ** E1),
     NR2 is N2*(10 ** E2),
     NR is NR1 + NR2.
+
+% Vero quando QR è il risultato (in forma canonica)
+% della sottrazione delle quantità Q1 e Q2
+% La sottrazione è valida solo se le due quantità
+% hanno dimesioni compatibili
 
 qsub(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
@@ -438,6 +487,9 @@ qsub(q(N1, D1), q(N2, D2), q(NR, D1)) :-
     NR is N1 - N2.
 
 
+% Vero quando QR è il risultato (in forma canonica)
+% della moltiplicazione delle quantità Q1 e Q2
+
 qtimes(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
     !,
@@ -457,6 +509,11 @@ qtimes(q(N1, D1), q(N2, D2), q(NR, DR)) :-
     mul_dim(D1, D2C, DR),
     NR is N1 * N2.
 
+% Moltiplica ricorsivamente una dimensione data
+% per una lista di altre dimensioni
+% Se la lista è vuota, ritorna la dimensione originale
+% Altrimenti, procede moltiplicando attraverso gli elementi della lista
+
 mul_dim(D, [], D).
 
 mul_dim(D1, [D2 | DRest], R) :- 
@@ -464,6 +521,9 @@ mul_dim(D1, [D2 | DRest], R) :-
     norm(D1 * D2E, D1M),
     mul_dim(D1M, DRest, R).
 
+% Vero quando QR è il risultato (in forma canonica)
+% dell'elevamento alla potenza di N
+% della quantità Q
     
 qexpt(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
@@ -479,6 +539,9 @@ qexpt(q(Number,U), N, q(NR, UR)):-
     NR is Number ** N,
     norm(U, URN),
     uexpt(URN, N, UR).
+
+% Gestisce l'elevamento a potenza di unità di misura,
+% considerando sia i prefissi che le unità composte
 
 uexpt(SI ** E, N, SI ** N1):-
     prefix_expansion(SI, _),
@@ -497,6 +560,9 @@ uexpt(U, N, UR):-
     uexpt(X, N, UR1),
     uexpt(Y, N, UR2),
     UR =.. [*, UR1, UR2].
+
+% Vero quando QR è il risultato (in forma canonica)
+% della moltiplicazione delle quantità Q1 e Q2
 
 qdiv(q(N, D), _, _) :-
     \+is_quantity(q(N, D)),
@@ -567,7 +633,7 @@ unify_units([X | Rest], [XU | NRest]) :-
 unify_units([X, Y | Rest], [X | NRest]) :-
     unify_units([Y | Rest], NRest).
 
-% Merge Sort Base
+% Algoritmo Merge Sort Base
 merge_sort([], []).
 merge_sort([A], [A]).
 
@@ -577,11 +643,17 @@ merge_sort([A, B | Rest], S) :-
     merge_sort(L2, S2),
     my_merge(S1, S2, S).
 
+% Divide una lista in due sottoliste
+
 divide([], [], []).
 divide([A], [A], []).
 
 divide([A, B | R], [A | Ra], [B | Rb]) :-
     divide(R, Ra, Rb).
+
+% Unisce due liste basandosi su una logica di comparazione di unità,
+% gestendo vari formati di elementi nelle liste
+% e ordinando eventuali sottoliste
 
 my_merge(A, [], A).
 my_merge([], B, B).
@@ -677,6 +749,7 @@ my_merge([A | Ra], [A | Rb], [A | M]) :-
 
 
 % Predicato per ordinare una moltiplicazione mantenendo le parentesi
+
 norm(A ** N, A ** N):-
     prefix_expansion(A, _),
     number(N),
@@ -698,6 +771,7 @@ norm(Expr, SortedExpr) :-
     list_to_expression(UnifiedList, SortedExpr).
 
 % Predicato per convertire un'espressione in una lista di fattori
+
 extract_elements(A, [A]):-
     atom(A),
     is_siu(A).
@@ -747,6 +821,7 @@ extract_elements(Comp, List):-
     append(L1, L2, List).
 
 % Predicato per convertire una lista di fattori in un'espressione
+
 list_to_expression([Factor], Factor):- 
     \+is_list(Factor),
     !.
