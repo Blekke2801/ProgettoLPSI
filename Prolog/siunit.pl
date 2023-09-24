@@ -20,12 +20,12 @@ expand_all(D, DR) :-
 
 % Espande l'elevamento a potenza
 
-expand_all(A**N, DR):-
+expand_all(A ** N, DR):-
     siu_base_expansion(A, DRM),
     !,
     uexpt(DRM, N, DR).
 
-expand_all(A**N, DR):-
+expand_all(A ** N, DR):-
     prefix_expansion(A, DRM),
     !,
     uexpt(DRM, N, DR).
