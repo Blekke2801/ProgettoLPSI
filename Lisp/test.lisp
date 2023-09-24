@@ -50,7 +50,7 @@
   (stringp (qdiv (q 21 'm) (q 0 's))))
 
 (defun test-qdiv-nonquantity ()
-  (stringp (qdiv (q 21 'a) (q 0.5 's))))
+  (stringp (qdiv (q 21 'z) (q 0.5 's))))
 
 (defun test-qexpt-normale ()
   (equal (qexpt (q 2 'm) 4) (q 16 '(** m 4))))
@@ -59,7 +59,7 @@
   (equal (qexpt (q 2 '(** m 2)) 4) (q 16 '(** m 8))))
 
 (defun test-qexpt-false ()
-  (stringp (qexpt (q 2 '(** a 2)) 3)))
+  (stringp (qexpt (q 2 '(** z 2)) 3)))
 
 (defun test-qsum-false ()
   (stringp (qsum (q 42 'm) (q 0.5 '(* (** s 3) (** m -3))))))
@@ -80,13 +80,13 @@
   (stringp (qsum (q 42 'ms) (q 42 'kg))))
 
 (defun test-qsum-ms ()
-  (equal (qsum (q 42 'ms) (q 42 'ms)) (q 84 'ms)))
+  (equal (qsum (q 42 's) (q 42 's)) (q 84 's)))
 
 (defun test-qsub-negative ()
   (stringp (qsub (q 42 'm) (q 44 'm))))
 
 (defun test-qsub-normal ()
-  (equal (qsub (q 42 'ms) (q 42 'ms)) (q 0 'ms)))
+  (equal (qsub (q 42 's) (q 42 's)) (q 0 's)))
 
 (defun test-qsub-negative-prefixes ()
   (stringp (qsub (q 42 'cm) (q 44 'm))))
@@ -111,22 +111,22 @@
   (test-once #'test-compare-mm)
   (test-once #'test-compare-mkg)
   (test-once #'test-compare-mBq)
-  ; (test-once #'test-qtimes)
-  ; (test-once #'test-qtimes-quad)
-  ; (test-once #'test-qdiv-normal)
+  (test-once #'test-qtimes)
+  (test-once #'test-qtimes-quad)
+  (test-once #'test-qdiv-normal)
   ; (test-once #'test-qdiv-per0)
   ; (test-once #'test-qdiv-nonquantity)
-  ; (test-once #'test-qexpt-normale)
-  ; (test-once #'test-qexpt-conexp)
+  (test-once #'test-qexpt-normale)
+  (test-once #'test-qexpt-conexp)
   ; (test-once #'test-qexpt-false)
   (test-once #'test-symbol-ohm)
   (test-once #'test-symbol-dc)
-  ; (test-once #'test-norm)
-  ; (test-once #'test-qsum-prefixes)
+  (test-once #'test-norm)
+  ; (test-once #'test-qsum-prefixes) non va
   ; (test-once #'test-qsum-false)
-  ; (test-once #'test-qsum-ms)
-  ; (test-once #'test-qsub-negative)
-  ; (test-once #'test-qsub-normal)
+  (test-once #'test-qsum-ms)
+  (test-once #'test-qsub-negative)
+  (test-once #'test-qsub-normal)
   ; (test-once #'test-qsub-negative-prefixes)
   ; (test-once #'test-qsum-false-2)
   )
