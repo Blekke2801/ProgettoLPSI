@@ -304,27 +304,76 @@
             (t
               (list '** a (+ (third lista) 1)))))))
 
-(defun compatibility (q1 q2)
-      (if (equal (norm (third q1)) (norm (third q2)))
-          t
-          (error "Le quantità non sono compatibili in termini di dimensioni.")))
-
 (defun q (n d)
   (if (and (numberp n) (is-dimension d))
-   (list Q (float n) (norm d)))
-    (error "non hai inserito una quantità/dimensione valida"))
+   (list 'Q (float n) (norm d))
+   (error "Le quantità non sono compatibili in termini di dimensioni.")))
+
+
 
 (defun qsum (q1 q2)
-  if((compatibility q1 q2)
-   q((+ (second q1) (second q2)) (third q1)) 
-   error "Le quantità non sono compatibili in termini di dimensioni."))
-  
+  (cond 
+      ((minusp (+ (second q1) (second q2))) (format t "~%Non valgono unità sotto lo zero")))
+     (if
+      (equal (norm (third q1)) (norm (third q2)))
+      (q(+ (second q1) (second q2)) (third q1)) 
+      (error "Le quantità non sono compatibili in termini di dimensioni.")))
+
 (defun qsub (q1 q2)
-  if((compatibility q1 q2)
-   q((- (second q1) (second q2)) (third q1))    
-   error "Le quantità non sono compatibili in termini di dimensioni."))
+    (cond 
+      ((minusp (- (second q1) (second q2))) (format t "~%Non valgono unità sotto lo zero")))
+  (if (equal (norm (third q1)) (norm (third q2)))
+   (q(- (second q1) (second q2)) (third q1)) 
+   (error "Le quantità non sono compatibili in termini di dimensioni.")))
+
 
 (defun qtimes (q1 q2)
-(q (* (quantity-value q1) (quantity-value q2)) 
-       (norm (append (third q1) (third q2)))))
-	
+  (if (and (is-quantity q1) (is-quantity q2))
+      (let ((value1 (second q1))
+            (dim1 (third q1))
+            (value2 (second q2))
+            (dim2 (third q2)))
+        (q 
+              (* value1 value2)
+              (norm (list '* dim1 dim2))))
+    (error "Non sono quantità valide")))
+
+
+
+(defun qexpt (quantity exponent)
+  (if (is-quantity quantity)
+      (let* ((value (second quantity))
+             (dimension (third quantity))
+             (new-value (expt value exponent))
+             (new-dimension (expt-dimension dimension exponent)))
+        (list 'q new-value new-dimension))
+      (error "Not a valid quantity")))
+
+(defun expt-dimension (dim exponent)
+  (cond 
+   ;; Caso base: dimensione atomica
+   ((atom dim) (list '** dim exponent))
+   
+   ;; Caso: [* A B]
+   ((and (listp dim) 
+         (eq (first dim) '*)) 
+    (let ((left (second dim))
+          (right (third dim)))
+      (list '* (expt-dimension left exponent) 
+               (expt-dimension right exponent))))
+
+   ;; Caso: [** A B]
+   ((and (listp dim) 
+         (eq (first dim) '**)) 
+    (let ((base (second dim))
+          (prev-exp (third dim)))
+      (list '** base (* prev-exp exponent))))
+
+   ;; Caso di default
+   (t dim)))
+
+(print(q 20 'm))
+(print(qsum (q -20 'm) (q 10 'm)))
+(print(qsub (q -20 'm) (q 10 'm)))
+(print(qtimes(q 20 'm)(q 10 '(* s m))))
+(print(qexpt(q 20 'm) 2))
