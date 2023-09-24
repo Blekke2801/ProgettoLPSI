@@ -88,6 +88,9 @@ test_symbol_dc :-
 test_norm :- 
     norm((m ** -2) * 'A' * (s ** -2) * kg * (m ** 2) * ('K' ** 2) * (s ** -1), kg * (s ** -3) * 'A' * ('K' ** 2)).
 
+test_norm_svuotato :-
+    norm((m ** -2) * (m ** 2), 1).
+
 test_qsum_prefixes :- 
     qsum(q(42, m), q(42, cm), q(42.42, m)).
 
@@ -146,6 +149,7 @@ test_all :-
     test_once(test_symbol_ohm),
     test_once(test_symbol_dc),
     test_once(test_norm),
+    test_once(test_norm_svuotato),
     test_once(test_qsum_prefixes),
     test_once(test_qsum_false),
     test_once(test_qsum_ms),

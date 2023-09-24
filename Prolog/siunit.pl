@@ -535,7 +535,9 @@ qexpt(_, N, _) :-
     !,
     false.
 
-qexpt(q(Number,U), N, q(NR, UR)):-
+qexpt(q(_, _), 0, q(1, 1)).
+
+qexpt(q(Number, U), N, q(NR, UR)):-
     NR is Number ** N,
     norm(U, URN),
     uexpt(URN, N, UR).
@@ -768,7 +770,14 @@ norm(Expr, SortedExpr) :-
     extract_elements(Expr, FactorList),
     merge_sort(FactorList, SortedFactorList),
     unify_units(SortedFactorList, UnifiedList),
-    list_to_expression(UnifiedList, SortedExpr).
+    check_void(UnifiedList, CheckeExoression),
+    list_to_expression(CheckeExoression, SortedExpr).
+
+% Predicato che controlla se una lista è vuota, se lo è, ritorna [1] che veràà trasformato in 1 da list_to_expression
+
+check_void([], [1]).
+
+check_void(Expr, Expr).
 
 % Predicato per convertire un'espressione in una lista di fattori
 
